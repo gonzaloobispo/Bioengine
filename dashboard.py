@@ -50,7 +50,7 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=30
 )
 
-name, authentication_status, username = authenticator.login('Acceso BioEngine', 'main')
+name, authentication_status, username = authenticator.login(fields={'Form name': 'Acceso BioEngine'})
 
 if authentication_status == False:
     st.error('Usuario/Contraseña incorrectos')
