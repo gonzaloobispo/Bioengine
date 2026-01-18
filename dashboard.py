@@ -22,10 +22,14 @@ from yaml.loader import SafeLoader
 # Load credentials from Streamlit secrets or local file
 try:
     # Try Streamlit Cloud secrets first
-    # Secrets come as a nested dict, we need to extract properly
+    # Secrets are immutable, we need a deep copy to make it mutable
+    import copy
     credentials_dict = {
-        "usernames": dict(st.secrets["credentials"]["usernames"])
+        "usernames": {}
     }
+    # Deep copy each user to make it mutable
+    for username, user_data in st.secrets["credentials"]["usernames"].items():
+        credentials_dict["usernames"][username] = dict(user_data)
 except:
     # Fallback to local file for development
     try:
