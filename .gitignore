@@ -1,0 +1,34 @@
+# Secrets
+config/secrets.json
+config/withings_tokens.json
+
+# Data files (too large for git)
+data_raw/
+data_processed/*.csv
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Backups
+*_backup.py
+data_raw/apple_health_export/*.xml
+.tmp.driveupload/
+data_processed/*.csv

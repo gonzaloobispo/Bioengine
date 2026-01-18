@@ -1,0 +1,64 @@
+{
+    "paciente": "Gonzalo Obispo Iglesias",
+    "metadata": {
+        "ultima_actualizacion": "2026-01-17",
+        "edad": 49,
+        "altura_cm": 176
+    },
+    "hitos_metabolicos": [
+        {
+            "fecha": "2021-03",
+            "evento": "Cirugía Bypass Gástrico",
+            "resultado": "Pérdida de ~40kg, de 113.8kg a 73kg"
+        },
+        {
+            "fecha": "2021-09",
+            "evento": "Pico Inflamatorio",
+            "detalle": "PCR 55.9 mg/L"
+        }
+    ],
+    "condiciones_cronicas": [
+        {
+            "nombre": "Hipertensión Arterial Sistémica",
+            "estado": "Controlada",
+            "medicacion": "Atenolol 50mg/día",
+            "impacto_deportivo": "Betabloqueante: Limita respuesta de frecuencia cardíaca al esfuerzo"
+        },
+        {
+            "nombre": "Trastorno por Déficit de Atención (TDA)",
+            "estado": "Activo",
+            "medicacion": "Metilfenidato 10mg"
+        }
+    ],
+    "lesiones_y_biomecanica": [
+        {
+            "nombre": "Epicondilitis (Codo de Tenista)",
+            "localizacion": "Brazo Derecho",
+            "fecha_diagnostico": "2024-10",
+            "estado": "Recurrente",
+            "recomendacion": "Revisar grip raqueta y técnica de topspin"
+        },
+        {
+            "nombre": "Tendinosis Cuadricipital",
+            "localizacion": "Rodilla Derecha",
+            "fecha_diagnostico": "2025-01",
+            "estado": "Fase Crónica (Sobrecarga)",
+            "recomendacion": "Suspender actividades de impacto (Running) temporalmente"
+        },
+        {
+            "nombre": "Pie Plano / Pronación Severa",
+            "estado": "Crónico",
+            "tratamiento": "Plantillas ortopédicas personalizadas",
+            "impacto": "Afecta cadena cinética (Rodilla/Tibia)"
+        }
+    ],
+    "suplementacion": [
+        "Creatina (3-5g/día)",
+        "Magnesio (400mg/día)"
+    ],
+    "alertas_riesgo": {
+        "umbral_stress_rodilla_alarma": 400,
+        "restriccion_impacto": true,
+        "frecuencia_cardiaca_max_ajustada": true
+    }
+}

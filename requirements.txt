@@ -1,0 +1,9 @@
+pandas
+streamlit
+altair
+garminconnect
+requests
+python-dateutil
+google-genai
+plotly
+streamlit-authenticator

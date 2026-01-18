@@ -1,0 +1,194 @@
+# dashboard.py - Panel de Control Bio-Engine (Con Memoria Persistente)
+import streamlit as st
+import pandas as pd
+import config
+import os
+import altair as alt
+import json
+import datetime
+
+# Archivo donde guardaremos tu última configuración
+SESSION_FILE = 'user_prefs.json'
+
+st.set_page_config(page_title="Bio-Engine Gonzalo", layout="wide", page_icon="🧬")
+
+# --- FUNCIONES DE MEMORIA (Persistencia) ---
+def cargar_preferencias(default_start, default_end):
+    """Intenta cargar las últimas fechas usadas, si no existen, usa las por defecto"""
+    if os.path.exists(SESSION_FILE):
+        try:
+            with open(SESSION_FILE, 'r') as f:
+                data = json.load(f)
+                # Convertir string a objeto fecha
+                saved_start = datetime.datetime.strptime(data['start'], '%Y-%m-%d').date()
+                saved_end = datetime.datetime.strptime(data['end'], '%Y-%m-%d').date()
+                return saved_start, saved_end
+        except:
+            pass # Si falla, ignoramos y usamos default
+    return default_start, default_end
+
+def guardar_preferencias(start, end):
+    """Guarda las fechas actuales en un archivo JSON"""
+    try:
+        data = {
+            'start': start.strftime('%Y-%m-%d'),
+            'end': end.strftime('%Y-%m-%d')
+        }
+        with open(SESSION_FILE, 'w') as f:
+            json.dump(data, f)
+    except:
+        pass
+
+# --- FUNCIONES DE CARGA DE DATOS ---
+def load_data():
+    # 1. Cargar Peso
+    if os.path.exists(config.CSV_PESO_MAESTRO):
+        try:
+            df_peso = pd.read_csv(config.CSV_PESO_MAESTRO, sep=';')
+            df_peso['Fecha'] = pd.to_datetime(df_peso['Fecha'])
+        except:
+            df_peso = pd.DataFrame(columns=['Fecha', 'Peso'])
+    else:
+        df_peso = pd.DataFrame(columns=['Fecha', 'Peso'])
+
+    # 2. Cargar Deportes
+    if os.path.exists(config.CSV_DEPORTE_MAESTRO):
+        try:
+            df_sport = pd.read_csv(config.CSV_DEPORTE_MAESTRO, sep=';')
+            df_sport['Fecha'] = pd.to_datetime(df_sport['Fecha'])
+            
+            # Blindaje de columnas
+            cols_necesarias = ['Distancia (km)', 'Duracion (min)', 'Calorias']
+            for col in cols_necesarias:
+                if col not in df_sport.columns:
+                    df_sport[col] = 0.0
+                else:
+                    df_sport[col] = pd.to_numeric(df_sport[col], errors='coerce').fillna(0)
+            
+            if 'Tipo' not in df_sport.columns:
+                df_sport['Tipo'] = 'Desconocido'
+                
+        except:
+            df_sport = pd.DataFrame(columns=['Fecha', 'Tipo', 'Distancia (km)', 'Duracion (min)', 'Calorias'])
+    else:
+        df_sport = pd.DataFrame(columns=['Fecha', 'Tipo', 'Distancia (km)', 'Duracion (min)', 'Calorias'])
+        
+    return df_peso, df_sport
+
+def mostrar_tabla_latina(df):
+    if df.empty:
+        st.write("Sin datos.")
+        return
+    df_visual = df.copy()
+    df_visual['Fecha'] = df_visual['Fecha'].dt.strftime('%d/%m/%Y')
+    st.dataframe(df_visual, use_container_width=True)
+
+# --- INICIO DE INTERFAZ ---
+st.title("🧬 Bio-Engine: Panel de Control Biomecánico")
+df_peso, df_sport = load_data()
+
+# --- SIDEBAR INTELIGENTE ---
+st.sidebar.header("Filtros Temporales")
+
+# 1. Definir valores por defecto técnicos (por si es la primera vez)
+if not df_sport.empty:
+    fecha_min_tecnica = df_sport['Fecha'].min().date()
+else:
+    fecha_min_tecnica = datetime.date(2024, 1, 1)
+fecha_max_tecnica = datetime.date.today()
+
+# 2. Intentar recuperar la memoria del usuario
+memoria_start, memoria_end = cargar_preferencias(fecha_min_tecnica, fecha_max_tecnica)
+
+# 3. Crear los inputs usando la memoria como valor inicial ('value')
+start_date = st.sidebar.date_input("Desde", value=memoria_start)
+end_date = st.sidebar.date_input("Hasta", value=memoria_end)
+
+# 4. Guardar inmediatamente la nueva selección (para la próxima vez)
+if start_date != memoria_start or end_date != memoria_end:
+    guardar_preferencias(start_date, end_date)
+
+# --- FILTROS DE DATOS ---
+mask_p = (df_peso['Fecha'].dt.date >= start_date) & (df_peso['Fecha'].dt.date <= end_date)
+mask_s = (df_sport['Fecha'].dt.date >= start_date) & (df_sport['Fecha'].dt.date <= end_date)
+
+df_p_filtered = df_peso.loc[mask_p].sort_values('Fecha', ascending=True)
+df_s_filtered = df_sport.loc[mask_s].sort_values('Fecha', ascending=True)
+
+# --- SECCIÓN 1: ESTRUCTURA CORPORAL ---
+st.header("1. Auditoría de Estructura Corporal")
+col1, col2, col3 = st.columns(3)
+if not df_p_filtered.empty:
+    ultimo = df_p_filtered.iloc[-1]
+    anterior = df_p_filtered.iloc[-2] if len(df_p_filtered) > 1 else ultimo
+    col1.metric("Peso Actual", f"{ultimo['Peso']} kg", f"{ultimo['Peso'] - anterior['Peso']:.2f} kg")
+    
+    val_grasa = f"{ultimo['Grasa_Pct']}%" if 'Grasa_Pct' in ultimo and pd.notnull(ultimo['Grasa_Pct']) else "N/A"
+    val_musc = f"{ultimo['Masa_Muscular_Kg']} kg" if 'Masa_Muscular_Kg' in ultimo and pd.notnull(ultimo['Masa_Muscular_Kg']) else "N/A"
+    
+    col2.metric("Grasa", val_grasa)
+    col3.metric("Músculo", val_musc)
+
+chart_peso = alt.Chart(df_p_filtered).mark_line(point=True).encode(
+    x=alt.X('Fecha', axis=alt.Axis(format='%d/%m/%Y')),
+    y=alt.Y('Peso', scale=alt.Scale(zero=False)),
+    tooltip=[alt.Tooltip('Fecha', format='%d/%m/%Y'), 'Peso']
+).interactive()
+st.altair_chart(chart_peso, use_container_width=True)
+
+# --- SECCIÓN 2: GESTIÓN DE ACTIVOS ---
+st.header("2. Gestión de Activos (Carga de Entrenamiento)")
+
+if not df_s_filtered.empty:
+    # KPI Totales
+    km_total = df_s_filtered['Distancia (km)'].sum()
+    carga_total = df_s_filtered['Calorias'].sum()
+    sesiones_total = len(df_s_filtered)
+
+    kpi1, kpi2, kpi3 = st.columns(3)
+    kpi1.metric("Km Totales", f"{km_total:.1f} km")
+    kpi2.metric("Carga Acumulada", f"{carga_total:,.0f} pts")
+    kpi3.metric("Sesiones Totales", f"{sesiones_total}")
+
+    st.divider()
+
+    # --- TABLA DESGLOSE TÁCTICO ---
+    st.subheader("📊 Desglose Táctico por Disciplina")
+    
+    # Agrupación segura
+    resumen = df_s_filtered.groupby('Tipo')[['Distancia (km)', 'Duracion (min)', 'Calorias']].sum().reset_index()
+    conteos = df_s_filtered['Tipo'].value_counts().reset_index()
+    conteos.columns = ['Tipo', 'Sesiones']
+    
+    resumen = pd.merge(resumen, conteos, on='Tipo')
+    
+    # Cálculo de métrica avanzada
+    resumen['Carga Promedio'] = resumen.apply(lambda x: x['Calorias'] / x['Sesiones'] if x['Sesiones'] > 0 else 0, axis=1)
+    
+    # Limpieza visual
+    resumen = resumen.rename(columns={
+        'Tipo': 'Deporte', 
+        'Distancia (km)': 'Distancia Total', 
+        'Calorias': 'Carga Total (Pts)'
+    })
+    
+    cols_orden = ['Deporte', 'Sesiones', 'Distancia Total', 'Carga Total (Pts)', 'Carga Promedio']
+    resumen = resumen[cols_orden].sort_values('Sesiones', ascending=False).round(1)
+    
+    st.dataframe(resumen, hide_index=True, use_container_width=True)
+    # ------------------------------
+
+    st.subheader("Evolución Temporal")
+    chart_sport = alt.Chart(df_s_filtered).mark_bar().encode(
+        x=alt.X('Fecha', axis=alt.Axis(format='%d/%m/%Y', title='Fecha')),
+        y=alt.Y('Distancia (km)', title='Volumen (km)'),
+        color='Tipo',
+        tooltip=['Fecha', 'Tipo', 'Distancia (km)', 'Duracion (min)']
+    ).interactive()
+    st.altair_chart(chart_sport, use_container_width=True)
+
+    with st.expander("Ver Bitácora Detallada"):
+        mostrar_tabla_latina(df_s_filtered.sort_values('Fecha', ascending=False))
+
+else:
+    st.info("No hay registros deportivos en el rango seleccionado.")

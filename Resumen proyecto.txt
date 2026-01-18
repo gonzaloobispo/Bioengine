@@ -1,0 +1,90 @@
+Lamento profundamente que esta haya sido tu experiencia, Gonzalo. Tienes toda la razón en tu reclamo: el objetivo era simplificar tu gestión y terminamos complicándola con inconsistencias en el código que "mutilaron" el Dashboard en lugar de mejorarlo. Como profesional, sé que el tiempo perdido y la pérdida de datos son inaceptables, especialmente cuando pagas por una solución "Premium".
+
+Cumplo con tu solicitud de cerrar el proceso aquí. A continuación, presento el **Informe Técnico de Traspaso (Handover Report)**.
+
+Este documento contiene la arquitectura exacta, la lógica de negocio definida y el estado final de los scripts. Guárdalo. Cuando decidas retomarlo (conmigo en una versión futura o con otro desarrollador), entrégales este informe y podrán levantar el proyecto sin que tengas que explicar nada de nuevo.
+
+---
+
+# 📁 INFORME TÉCNICO: PROYECTO BIO-ENGINE
+
+**Cliente:** Gonzalo (Contador Público / Gerente General)
+**Objetivo:** Centralización de datos biométricos y deportivos (Garmin, Withings, Apple Health, Runkeeper) para auditoría de salud, control de activos (calzado) y detección de inflamación biomecánica.
+**Stack Tecnológico:** Python 3.13, Pandas, Streamlit, Altair.
+
+## 1. Arquitectura del Sistema
+
+El sistema funciona mediante un flujo de **ETL (Extract, Transform, Load)** local:
+
+1. **Ingesta (Extract):**
+* `cloud_sync.py`: Se conecta a APIs de Garmin y Withings para traer los datos del día.
+* *Legacy:* Archivos XML de Apple Health y CSV de Runkeeper (procesados una única vez y cacheados).
+
+
+2. **Procesamiento (Transform) - `super_merger.py`:**
+* Unifica fuentes históricas + datos nuevos.
+* Aplica reglas de negocio (asignación de calzado, limpieza de duplicados).
+* Cruza con `calendario_gonzalo.csv` para identificar competencias.
+
+
+3. **Visualización (Load) - `dashboard.py`:**
+* Interfaz web local que muestra KPIs, gráficos de correlación y alertas.
+
+
+
+## 2. Estructura de Archivos (Directorio `C:\BioEngine_Gonzalo`)
+
+Para que el proyecto funcione al retomarlo, esta estructura debe existir:
+
+* **`config.py`**: Archivo de rutas absolutas (`DATA_RAW`, `DATA_PROCESSED`).
+* **`cloud_sync.py`**: Script de conexión a APIs.
+* **`super_merger.py`**: **(CRÍTICO)** Contiene la lógica de fusión y reglas de calzado.
+* **`dashboard.py`**: El código de la interfaz visual (Streamlit).
+* **`BioEngine.bat`**: Ejecutable para iniciar todo con un clic.
+* **Carpeta `data_processed/**`:
+* `calendario_gonzalo.csv`: Archivo manual con fechas de carreras.
+* `historial_deportivo_unificado.csv`: Base de datos maestra de actividades.
+* `historial_peso_unificado.csv`: Base de datos maestra de peso.
+
+
+
+## 3. Lógica de Negocio Definida (Reglas Hardcoded)
+
+Quien retome el código debe respetar estas reglas que definimos para tu perfil:
+
+### A. Gestión de Activos (Calzado)
+
+El sistema asigna automáticamente el zapato según la actividad si no se especifica lo contrario:
+
+1. **Regla de Competencia:** Si la fecha coincide con `calendario_gonzalo.csv`, usa el zapato declarado ahí.
+2. **Tenis:** Si la actividad contiene "Tenis"  **Babolat Fury 3**.
+3. **Trail:** Si la actividad contiene "Trail" o es en cerro  **New Balance Garoé** (o Hoka Speedgoat 6 según configuración).
+4. **Running/Caminata (Default):**  **Brooks Adrenaline GTS 23**.
+5. **Amortización:** Límite de alerta establecido en **500 km** (por condición de pronación severa).
+
+### B. Auditoría Biomecánica (Inflamación)
+
+El sistema busca correlación entre Carga y Peso para detectar edema/inflamación en la rodilla derecha:
+
+* **Disparador:** Si `Distancia (km)` > 10 km en las últimas 24hs.
+* **Consecuencia:** Si `Peso Actual` > `Peso Ayer` + 1.0 kg.
+* **Output:** Genera alerta "Posible inflamación por impacto".
+
+### C. Métricas Financieras/Deportivas
+
+* **Eficiencia Metabólica:** Fórmula . (Objetivo: reducir el valor).
+* **ROI por Deporte:** Tabla comparativa de Kcal/Km para evaluar qué deporte "rinde" más para el control de peso.
+
+## 4. Estado Final y Errores Conocidos
+
+Al momento de cerrar el proyecto, estos son los puntos a revisar por el futuro desarrollador:
+
+1. **Pérdida de Datos en Filtrado:** Las versiones recientes del script `super_merger.py` fueron agresivas al eliminar duplicados, lo que causó que el historial antiguo (2014-2023) desapareciera de la vista. **Solución futura:** Revisar la función `drop_duplicates` y asegurar que los DataFrames "Legacy" (Apple/Runkeeper) se concatenen siempre al final del proceso de actualización.
+2. **Librería Streamlit:** El código final fue ajustado para la normativa 2025 (`width='stretch'`), pero las tablas nativas a veces fallan con parámetros nulos.
+3. **Integración de Calendario:** La lectura del CSV de carreras funciona, pero es sensible al formato de fecha. Se recomienda estandarizar a `YYYY-MM-DD` en Excel.
+
+---
+
+Gonzalo, lamento no haber cumplido con la expectativa de ser la mejor solución. Gracias por la paciencia que tuviste intentando iterar esto. Tienes aquí la base lógica para que, cuando la tecnología madure o decidas volver, no empieces de cero.
+
+Mucha suerte en tus carreras y en la gestión.

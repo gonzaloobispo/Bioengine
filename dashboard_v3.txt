@@ -1,0 +1,168 @@
+# dashboard.py - Panel Bio-Engine (Corregido y Optimizado)
+import streamlit as st
+import pandas as pd
+import config
+import os
+import altair as alt
+import json
+import datetime
+
+# Archivo de persistencia
+SESSION_FILE = 'user_prefs.json'
+
+# Configuración de página
+st.set_page_config(page_title="Bio-Engine Gonzalo", layout="wide", page_icon="🧬")
+
+# --- 1. GESTIÓN DE MEMORIA (Lo primero para asegurar filtros) ---
+def cargar_preferencias(default_start, default_end):
+    """Carga fechas guardadas o devuelve las de defecto de forma segura"""
+    if os.path.exists(SESSION_FILE):
+        try:
+            with open(SESSION_FILE, 'r') as f:
+                data = json.load(f)
+                s = datetime.datetime.strptime(data['start'], '%Y-%m-%d').date()
+                e = datetime.datetime.strptime(data['end'], '%Y-%m-%d').date()
+                # Validación extra: que las fechas tengan sentido
+                if s <= e:
+                    return s, e
+        except:
+            pass # Si falla el archivo, no pasa nada
+    return default_start, default_end
+
+def guardar_preferencias(start, end):
+    """Guarda preferencias en disco"""
+    try:
+        data = {'start': start.strftime('%Y-%m-%d'), 'end': end.strftime('%Y-%m-%d')}
+        with open(SESSION_FILE, 'w') as f:
+            json.dump(data, f)
+    except:
+        pass
+
+# --- 2. CARGA DE DATOS ---
+def load_data():
+    # Peso
+    if os.path.exists(config.CSV_PESO_MAESTRO):
+        try:
+            df_p = pd.read_csv(config.CSV_PESO_MAESTRO, sep=';')
+            df_p['Fecha'] = pd.to_datetime(df_p['Fecha'])
+        except: df_p = pd.DataFrame(columns=['Fecha', 'Peso'])
+    else: df_p = pd.DataFrame(columns=['Fecha', 'Peso'])
+
+    # Deportes
+    if os.path.exists(config.CSV_DEPORTE_MAESTRO):
+        try:
+            df_s = pd.read_csv(config.CSV_DEPORTE_MAESTRO, sep=';')
+            df_s['Fecha'] = pd.to_datetime(df_s['Fecha'])
+            # Asegurar columnas numéricas
+            for c in ['Distancia (km)', 'Duracion (min)', 'Calorias']:
+                df_s[c] = pd.to_numeric(df_s.get(c, 0), errors='coerce').fillna(0)
+            if 'Tipo' not in df_s.columns: df_s['Tipo'] = 'Otros'
+        except: df_s = pd.DataFrame(columns=['Fecha', 'Tipo', 'Distancia (km)', 'Calorias'])
+    else: df_s = pd.DataFrame(columns=['Fecha', 'Tipo', 'Distancia (km)', 'Calorias'])
+        
+    return df_p, df_s
+
+def mostrar_tabla_latina(df):
+    if df.empty:
+        st.write("Sin datos.")
+        return
+    df_v = df.copy()
+    df_v['Fecha'] = df_v['Fecha'].dt.strftime('%d/%m/%Y')
+    # CORRECCIÓN WARNING: Usamos width="stretch" en lugar de use_container_width
+    st.dataframe(df_v, width=None) # Dejamos auto-width para evitar conflicto de versiones
+
+# --- 3. INICIO LÓGICO ---
+st.title("🧬 Bio-Engine: Panel de Control")
+df_peso, df_sport = load_data()
+
+# --- 4. BARRA LATERAL (SIDEBAR) - PRIORIDAD ALTA ---
+st.sidebar.header("Filtros Temporales")
+
+# Fechas por defecto técnicas
+def_start = datetime.date(2024, 1, 1)
+if not df_sport.empty:
+    def_start = df_sport['Fecha'].min().date()
+def_end = datetime.date.today()
+
+# Recuperar memoria
+mem_start, mem_end = cargar_preferencias(def_start, def_end)
+
+# Inputs
+start_date = st.sidebar.date_input("Desde", value=mem_start)
+end_date = st.sidebar.date_input("Hasta", value=mem_end)
+
+# Guardar cambios
+if start_date != mem_start or end_date != mem_end:
+    guardar_preferencias(start_date, end_date)
+
+# --- 5. APLICAR FILTROS ---
+mask_p = (df_peso['Fecha'].dt.date >= start_date) & (df_peso['Fecha'].dt.date <= end_date)
+mask_s = (df_sport['Fecha'].dt.date >= start_date) & (df_sport['Fecha'].dt.date <= end_date)
+
+df_p = df_peso.loc[mask_p].sort_values('Fecha')
+df_s = df_sport.loc[mask_s].sort_values('Fecha')
+
+# --- 6. VISUALIZACIÓN ---
+
+# SECCIÓN 1: PESO
+st.header("1. Auditoría de Estructura Corporal")
+c1, c2, c3 = st.columns(3)
+if not df_p.empty:
+    last = df_p.iloc[-1]
+    prev = df_p.iloc[-2] if len(df_p) > 1 else last
+    c1.metric("Peso", f"{last['Peso']} kg", f"{last['Peso']-prev['Peso']:.2f} kg")
+    c2.metric("Grasa", f"{last.get('Grasa_Pct', 'N/A')}%")
+    c3.metric("Músculo", f"{last.get('Masa_Muscular_Kg', 'N/A')} kg")
+
+# Gráfica Peso (Altair maneja el ancho nativamente con theme='streamlit')
+chart_p = alt.Chart(df_p).mark_line(point=True).encode(
+    x=alt.X('Fecha', axis=alt.Axis(format='%d/%m/%Y')),
+    y=alt.Y('Peso', scale=alt.Scale(zero=False)),
+    tooltip=[alt.Tooltip('Fecha', format='%d/%m/%Y'), 'Peso']
+).interactive()
+st.altair_chart(chart_p, theme="streamlit", use_container_width=True) 
+
+# SECCIÓN 2: DEPORTES
+st.header("2. Gestión de Activos (Entrenamiento)")
+if not df_s.empty:
+    # KPIs
+    k1, k2, k3 = st.columns(3)
+    k1.metric("Km Totales", f"{df_s['Distancia (km)'].sum():.1f} km")
+    k2.metric("Carga", f"{df_s['Calorias'].sum():,.0f} pts")
+    k3.metric("Sesiones", f"{len(df_s)}")
+    
+    st.divider()
+    
+    # TABLA TÁCTICA
+    st.subheader("📊 Desglose Táctico")
+    resumen = df_s.groupby('Tipo').agg({
+        'Distancia (km)': 'sum', 
+        'Duracion (min)': 'sum', 
+        'Calorias': 'sum', 
+        'Fecha': 'count'
+    }).reset_index().rename(columns={'Fecha': 'Sesiones', 'Tipo': 'Deporte'})
+    
+    resumen['Carga Promedio'] = resumen['Calorias'] / resumen['Sesiones']
+    
+    # Ordenar y Redondear
+    resumen = resumen.sort_values('Sesiones', ascending=False).round(1)
+    
+    # CORRECCIÓN WARNING: Usamos parametro width si está disponible, o dejamos default
+    # Para evitar errores en tu version especifica, quitamos use_container_width=True aqui
+    # y dejamos que Streamlit lo maneje por defecto, que suele ser ancho completo en tablas
+    st.dataframe(resumen, hide_index=True)
+
+    # Gráfica Barras
+    st.subheader("Evolución")
+    chart_s = alt.Chart(df_s).mark_bar().encode(
+        x=alt.X('Fecha', axis=alt.Axis(format='%d/%m/%Y')),
+        y='Distancia (km)',
+        color='Tipo',
+        tooltip=['Fecha', 'Tipo', 'Distancia (km)']
+    ).interactive()
+    st.altair_chart(chart_s, theme="streamlit", use_container_width=True)
+    
+    with st.expander("Ver Bitácora"):
+        mostrar_tabla_latina(df_s.sort_values('Fecha', ascending=False))
+else:
+    st.info("Sin datos deportivos en este rango.")
