@@ -273,6 +273,41 @@ def render_coach_chat(assistant):
             start_date = params.get('start_date')
             assistant.force_plan_regeneration(start_date)
             reply_text += f"\n\n✅ *He actualizado el plan comenzando el {start_date or 'hoy'}.*"
+        
+        # Nueva acción: modificar plan de hoy
+        elif action == "modify_today_plan" or "agrega" in prompt.lower() or "cambia" in prompt.lower():
+            # Detectar actividad solicitada
+            actividad_nueva = None
+            if "ciclismo" in prompt.lower():
+                actividad_nueva = "Ciclismo Recuperación"
+                duracion = 45
+            elif "fuerza" in prompt.lower() or "hipertrofia" in prompt.lower():
+                actividad_nueva = "Fuerza Hipertrofia Fase 1"
+                duracion = 45
+            elif "descanso" in prompt.lower():
+                actividad_nueva = "Descanso Total"
+                duracion = 0
+            
+            if actividad_nueva:
+                # Modificar plan de hoy
+                from datetime import datetime
+                hoy = datetime.now().strftime("%Y-%m-%d")
+                
+                # Buscar y modificar el día de hoy en el plan
+                for dia in assistant.plan['semana']:
+                    if dia['fecha'] == hoy:
+                        dia['actividad'] = actividad_nueva
+                        dia['duracion_obj_min'] = duracion
+                        dia['estado'] = 'Pendiente'
+                        break
+                
+                # Guardar plan modificado
+                import json
+                with open(assistant.plan_file, 'w', encoding='utf-8') as f:
+                    json.dump(assistant.plan, f, indent=2, ensure_ascii=False)
+                
+                reply_text += f"\n\n✅ **Plan modificado:** Hoy tienes **{actividad_nueva}** ({duracion} min)."
+                st.success(f"✅ Plan actualizado: {actividad_nueva}")
             
         with st.chat_message("assistant"):
             st.markdown(reply_text)
