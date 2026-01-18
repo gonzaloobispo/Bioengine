@@ -313,7 +313,7 @@ def render_coach_chat(assistant):
                 
                 # Buscar y modificar el día de hoy en el plan
                 dia_encontrado = False
-                for dia in assistant.plan['semana']:
+                for dia in assistant.current_plan['semana']:
                     if dia['fecha'] == hoy:
                         dia['actividad'] = actividad_nueva
                         dia['duracion_obj_min'] = duracion
