@@ -50,18 +50,20 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=30
 )
 
-name, authentication_status, username = authenticator.login(fields={'Form name': 'Acceso BioEngine'})
+# Call login - this renders the login form
+authenticator.login()
 
-if authentication_status == False:
+# Check authentication status from authenticator properties
+if st.session_state.get("authentication_status") == False:
     st.error('Usuario/Contraseña incorrectos')
     st.stop()
-elif authentication_status == None:
+elif st.session_state.get("authentication_status") == None:
     st.warning('Por favor ingresa tu usuario y contraseña')
     st.stop()
 
 # If authenticated, show logout button in sidebar
 authenticator.logout('Cerrar Sesión', 'sidebar')
-st.sidebar.write(f'Bienvenido *{name}*')
+st.sidebar.write(f'Bienvenido *{st.session_state.get("name")}*')
 
 # ============================================
 # MAIN DASHBOARD (Only shown if authenticated)
