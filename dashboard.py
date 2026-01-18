@@ -311,7 +311,8 @@ else:
     df_p_f_full = pd.DataFrame()
 
 # --- 3. RENDERIZADO DE SECCIONES DINÁMICAS ---
-if not df_s_f.empty and (not df_p_f_apis.empty or not df_p_f_full.empty):
+# Siempre mostrar tabs (cambio temporal para debug)
+if True:  # Antes: if not df_s_f.empty and (not df_p_f_apis.empty or not df_p_f_full.empty):
     # Obtener último peso para el header
     df_p_sorted = df_p_f_full.dropna(subset=['Fecha']).sort_values('Fecha')
     last_p = df_p_sorted.iloc[-1]['Peso'] if not df_p_sorted.empty else 76.0
