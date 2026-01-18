@@ -22,15 +22,19 @@ from yaml.loader import SafeLoader
 # Load credentials from Streamlit secrets or local file
 try:
     # Try Streamlit Cloud secrets first
-    credentials = st.secrets["credentials"]
+    # Secrets come as a nested dict, we need to extract properly
+    credentials_dict = {
+        "usernames": dict(st.secrets["credentials"]["usernames"])
+    }
 except:
     # Fallback to local file for development
     try:
         with open('.streamlit/credentials.yaml') as file:
-            credentials = yaml.load(file, Loader=SafeLoader)
+            config_data = yaml.load(file, Loader=SafeLoader)
+            credentials_dict = config_data
     except:
         # Create default if not exists
-        credentials = {
+        credentials_dict = {
             "usernames": {
                 "gonzalo": {
                     "name": "Gonzalo Obispo",
@@ -40,7 +44,7 @@ except:
         }
 
 authenticator = stauth.Authenticate(
-    credentials['usernames'],
+    credentials_dict,
     'bioengine_cookie',
     'bioengine_signature_key',
     cookie_expiry_days=30
