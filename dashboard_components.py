@@ -262,31 +262,49 @@ def render_coach_chat(assistant):
         }
         
         with st.spinner("Pensando..."):
-            response_data = assistant.brain.send_message(prompt, context)
+            # Pasar historial de conversación para memoria
+            conversation_history = [{"role": msg["role"], "content": msg["content"]} 
+                                   for msg in st.session_state.messages[-5:]]  # Últimos 5 mensajes
+            response_data = assistant.brain.send_message(prompt, context, conversation_history)
         
         reply_text = response_data['text']
         action = response_data['action']
         params = response_data.get('action_params', {})
         
+        # Bandera para saber si se modificó el plan
+        plan_modificado = False
+        
         # Ejecutar acción si existe
         if action == "force_plan_regeneration":
             start_date = params.get('start_date')
             assistant.force_plan_regeneration(start_date)
-            reply_text += f"\n\n✅ *He actualizado el plan comenzando el {start_date or 'hoy'}.*"
+            reply_text += f"\n\n✅ *He actualizado el plan comenzando el {start_date or 'hoy'}."
+            plan_modificado = True
         
-        # Nueva acción: modificar plan de hoy
-        elif action == "modify_today_plan" or "agrega" in prompt.lower() or "cambia" in prompt.lower():
-            # Detectar actividad solicitada
+        # Nueva acción: modificar plan de hoy (con lógica corregida)
+        # Detectar keywords de modificación
+        keywords_modificacion = ["planifica", "agrega", "cambia", "modifica", "pon"]
+        keywords_actividad = {
+            "ciclismo": ("Ciclismo Recuperación", 45),
+            "bicicleta": ("Ciclismo Recuperación", 45),
+            "fuerza": ("Fuerza Hipertrofia Fase 1", 45),
+            "hipertrofia": ("Fuerza Hipertrofia Fase 1", 45),
+            "descanso": ("Descanso Total", 0)
+        }
+        
+        # Verificar si hay intención de modificar
+        tiene_intencion = any(kw in prompt.lower() for kw in keywords_modificacion)
+        
+        if tiene_intencion or action == "modify_today_plan":
+            # Detectar qué actividad quiere
             actividad_nueva = None
-            if "ciclismo" in prompt.lower():
-                actividad_nueva = "Ciclismo Recuperación"
-                duracion = 45
-            elif "fuerza" in prompt.lower() or "hipertrofia" in prompt.lower():
-                actividad_nueva = "Fuerza Hipertrofia Fase 1"
-                duracion = 45
-            elif "descanso" in prompt.lower():
-                actividad_nueva = "Descanso Total"
-                duracion = 0
+            duracion = 0
+            
+            for keyword, (actividad, mins) in keywords_actividad.items():
+                if keyword in prompt.lower():
+                    actividad_nueva = actividad
+                    duracion = mins
+                    break
             
             if actividad_nueva:
                 # Modificar plan de hoy
@@ -294,20 +312,28 @@ def render_coach_chat(assistant):
                 hoy = datetime.now().strftime("%Y-%m-%d")
                 
                 # Buscar y modificar el día de hoy en el plan
+                dia_encontrado = False
                 for dia in assistant.plan['semana']:
                     if dia['fecha'] == hoy:
                         dia['actividad'] = actividad_nueva
                         dia['duracion_obj_min'] = duracion
                         dia['estado'] = 'Pendiente'
+                        dia_encontrado = True
                         break
                 
-                # Guardar plan modificado
-                import json
-                with open(assistant.plan_file, 'w', encoding='utf-8') as f:
-                    json.dump(assistant.plan, f, indent=2, ensure_ascii=False)
-                
-                reply_text += f"\n\n✅ **Plan modificado:** Hoy tienes **{actividad_nueva}** ({duracion} min)."
-                st.success(f"✅ Plan actualizado: {actividad_nueva}")
+                if dia_encontrado:
+                    # Guardar plan modificado
+                    import json
+                    with open(assistant.plan_file, 'w', encoding='utf-8') as f:
+                        json.dump(assistant.plan, f, indent=2, ensure_ascii=False)
+                    
+                    reply_text += f"\n\n✅ **Plan modificado:** Hoy ({hoy}) tienes **{actividad_nueva}** ({duracion} min)."
+                    st.success(f"✅ Plan actualizado: {actividad_nueva}")
+                    plan_modificado = True
+        
+        # Si se modificó el plan, forzar recarga en próximo refresh
+        if plan_modificado:
+            st.session_state['plan_modified'] = True
             
         with st.chat_message("assistant"):
             st.markdown(reply_text)

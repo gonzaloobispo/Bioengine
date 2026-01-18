@@ -10,7 +10,7 @@
             "intensidad": "-",
             "equipo_sugerido": "-",
             "notas": "Permite que la inflamación baje.",
-            "estado": "Fallido",
+            "estado": "Pendiente",
             "cumplimiento_real": null
         },
         {
@@ -21,8 +21,8 @@
             "intensidad": "Carga Media Controlada",
             "equipo_sugerido": "Mancuernas 5kg + Colchoneta",
             "notas": "**Rutina A (Empuje/Cuádriceps Seguro):**\n1. Sentadilla Isométrica en Pared (4x45s)\n2. Press de Hombros Sentado (4x12)\n3. Floor Press (Pecho) (4x12)\n4. Elevación Talones (Gemelos) (4x20)\n5. Deadbug (Core) (3x15)",
-            "estado": "Cumplido",
-            "cumplimiento_real": "2.9 km / 80 min"
+            "estado": "Pendiente",
+            "cumplimiento_real": null
         },
         {
             "fecha": "2026-01-14",
@@ -32,7 +32,7 @@
             "intensidad": "Z1 | 85-90 RPM",
             "equipo_sugerido": "Trek FX Sport AL 3",
             "notas": "Meta: ~8.5km. Cadencia alta vital para lubricar rodilla sin carga.",
-            "estado": "Fallido",
+            "estado": "Pendiente",
             "cumplimiento_real": null
         },
         {
@@ -43,7 +43,7 @@
             "intensidad": "Carga Media Controlada",
             "equipo_sugerido": "Mancuernas 5kg + Colchoneta",
             "notas": "**Rutina B (Tracción/Cadena Posterior):**\n1. Peso Muerto Rumano c/mancuernas (4x12)\n2. Remo Unilateral (4x12)\n3. Puente Glúteo Isométrico (4x45s)\n4. Curl Bíceps (3x15)\n5. Plancha Lateral (3x30s)",
-            "estado": "Fallido",
+            "estado": "Pendiente",
             "cumplimiento_real": null
         },
         {
@@ -54,7 +54,7 @@
             "intensidad": "-",
             "equipo_sugerido": "-",
             "notas": "Permite que la inflamación baje.",
-            "estado": "Fallido",
+            "estado": "Pendiente",
             "cumplimiento_real": null
         },
         {

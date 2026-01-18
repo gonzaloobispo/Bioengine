@@ -30,16 +30,25 @@ class LlmClient:
         # 2. Env Var
         return os.environ.get('GEMINI_API_KEY')
 
-    def send_message(self, user_message, context_data=None):
+    def send_message(self, user_message, context_data=None, conversation_history=None):
         if not self.client:
             return {
                 "text": "⚠️ No tengo configurada una API KEY de Gemini. Por favor configúrala en `config/secrets.json`.",
                 "action": None
             }
 
-        # Construir Prompt con Contexto
+        # Construir Prompt con Contexto e Historial
         system_instruction = self._build_system_prompt(context_data)
-        full_content = f"{system_instruction}\n\nUSER MESSAGE: {user_message}"
+        
+        # Agregar historial de conversación si existe
+        history_text = ""
+        if conversation_history:
+            history_text = "\n\nCONVERSATION HISTORY:\n"
+            for msg in conversation_history:
+                role = "USER" if msg["role"] == "user" else "ASSISTANT"
+                history_text += f"{role}: {msg['content']}\n"
+        
+        full_content = f"{system_instruction}{history_text}\n\nUSER MESSAGE: {user_message}"
 
         # Lista de modelos a probar en orden de prioridad (Fastest/Cheapest -> Standard)
         # Basado en el listado real de la API
