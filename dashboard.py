@@ -190,8 +190,15 @@ def sync_and_load_data():
 
 st.title("🧬 Bio-Engine: Inteligencia Biomecánica")
 
-# Ejecutar sincronización automática
-df_peso_apis, df_peso_full, df_sport = sync_and_load_data()
+# Ejecutar sincronización automática (con manejo de errores)
+try:
+    df_peso_apis, df_peso_full, df_sport = sync_and_load_data()
+except Exception as e:
+    st.warning(f"⚠️ No hay datos suficientes para el rango seleccionado. Por favor, amplía el filtro en la barra lateral o sincroniza la nube.")
+    # Crear DataFrames vacíos para que no falle el resto
+    df_peso_apis = pd.DataFrame()
+    df_peso_full = pd.DataFrame()
+    df_sport = pd.DataFrame()
 
 # --- 2. BARRA LATERAL ---
 st.sidebar.header("🔄 Sincronización")
