@@ -184,3 +184,110 @@ class ContextManager:
             formatted += f"- {insight.get('patron', '')} → {insight.get('accion', '')}\n"
         
         return formatted
+    
+    def recalculate_stats_from_csv(self):
+        """
+        Recalcula TODAS las estadísticas desde los archivos maestros
+        Llamar después de sincronización con Garmin/Withings
+        """
+        from datetime import datetime, timedelta
+        import pandas as pd
+        
+        try:
+            # Fecha límite: últimos 30 días
+            fecha_limite = datetime.now() - timedelta(days=30)
+            
+            stats = {
+                'km_totales': 0,
+                'actividades_completadas': 0,
+                'peso_promedio_kg': 0,
+                'adherencia_plan': 0,
+                'dolor_rodilla_dias': 0,
+                'ultimo_calculo': datetime.now().strftime('%Y-%m-%d %H:%M')
+            }
+            
+            # 1. CALCULAR ACTIVIDADES (desde CSV maestro)
+            csv_deporte = config.CSV_DEPORTE_MAESTRO
+            if os.path.exists(csv_deporte):
+                df_sport = pd.read_csv(csv_deporte, sep=';')
+                if not df_sport.empty and 'Fecha' in df_sport.columns:
+                    # Parsear fecha
+                    df_sport['Fecha'] = pd.to_datetime(df_sport['Fecha'], errors='coerce')
+                    
+                    # Filtrar últimos 30 días
+                    df_reciente = df_sport[df_sport['Fecha'] >= fecha_limite]
+                    
+                    # Contar actividades
+                    stats['actividades_completadas'] = len(df_reciente)
+                    
+                    # Sumar kilómetros
+                    if 'Distancia (km)' in df_reciente.columns:
+                        # Parsear números con formato español (coma decimal)
+                        km_series = df_reciente['Distancia (km)'].astype(str).str.replace(',', '.')
+                        km_numericos = pd.to_numeric(km_series, errors='coerce').fillna(0)
+                        stats['km_totales'] = round(km_numericos.sum(), 2)
+            
+            # 2. CALCULAR PESO PROMEDIO (desde CSV maestro)
+            csv_peso = config.CSV_PESO_MAESTRO
+            if os.path.exists(csv_peso):
+                df_peso = pd.read_csv(csv_peso, sep=';')
+                if not df_peso.empty and 'Fecha' in df_peso.columns and 'Peso' in df_peso.columns:
+                    df_peso['Fecha'] = pd.to_datetime(df_peso['Fecha'], errors='coerce')
+                    df_peso_reciente = df_peso[df_peso['Fecha'] >= fecha_limite]
+                    
+                    if not df_peso_reciente.empty:
+                        # Parsear pesos
+                        peso_series = df_peso_reciente['Peso'].astype(str).str.replace(',', '.')
+                        pesos = pd.to_numeric(peso_series, errors='coerce').dropna()
+                        if len(pesos) > 0:
+                            stats['peso_promedio_kg'] = round(pesos.mean(), 1)
+            
+            # 3. CALCULAR DÍAS CON DOLOR (desde dolor_rodilla.json)
+            dolor_file = os.path.join(config.BASE_DIR, 'data_cloud_sync', 'dolor_rodilla.json')
+            if os.path.exists(dolor_file):
+                with open(dolor_file, 'r', encoding='utf-8') as f:
+                    dolor_data = json.load(f)
+                    
+                registros_recientes = [
+                    r for r in dolor_data.get('registros', [])
+                    if datetime.strptime(r['fecha'], '%Y-%m-%d') >= fecha_limite
+                ]
+                
+                # Contar días únicos con dolor > 0
+                dias_con_dolor = set()
+                for r in registros_recientes:
+                    if r.get('intensidad', 0) > 0:
+                        dias_con_dolor.add(r['fecha'])
+                
+                stats['dolor_rodilla_dias'] = len(dias_con_dolor)
+            
+            # 4. CALCULAR ADHERENCIA AL PLAN (aproximada)
+            # Si hay plan_entrenamiento.json, comparar días con actividad vs días planificados
+            plan_file = os.path.join(config.BASE_DIR, 'config', 'plan_entrenamiento.json')
+            if os.path.exists(plan_file):
+                with open(plan_file, 'r', encoding='utf-8') as f:
+                    plan = json.load(f)
+                    
+                # Contar días en el plan que NO son "Descanso Total"
+                dias_planificados = sum(
+                    1 for dia in plan.get('semana', []) 
+                    if dia.get('actividad', '') != 'Descanso Total'
+                )
+                
+                # Aproximar adherencia diviendo semanas
+                if dias_planificados > 0:
+                    semanas_en_30d = 30 / 7
+                    dias_esperados = int(dias_planificados * semanas_en_30d)
+                    if dias_esperados > 0:
+                        stats['adherencia_plan'] = min(100, int((stats['actividades_completadas'] / dias_esperados) * 100))
+            
+            # Guardar en contexto
+            self.context['estadisticas_ultimos_30d'] = stats
+            self._save_context()
+            
+            print(f"✅ Estadísticas recalculadas: {stats['actividades_completadas']} actividades, {stats['km_totales']} km")
+            return True
+            
+        except Exception as e:
+            print(f"⚠️ Error recalculando stats: {e}")
+            return False
