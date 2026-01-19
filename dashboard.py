@@ -310,75 +310,67 @@ if not df_peso_full.empty and 'Fecha' in df_peso_full.columns:
 else:
     df_p_f_full = pd.DataFrame()
 
-    # --- 3. RENDERIZADO DE SECCIONES DINÁMICAS ---
-    # Obtener el último peso histórico REAL (independientemente del filtro de fechas)
-    last_p = 76.0
-    last_p_date = 'N/A'
-    if not df_peso_full.empty and 'Fecha' in df_peso_full.columns:
-        # Usamos el DataFrame completo (df_peso_full), no el filtrado (df_p_f_full)
-        df_p_all_sorted = df_peso_full.dropna(subset=['Fecha']).sort_values('Fecha')
-        if not df_p_all_sorted.empty:
-            # Obtener el último peso de toda la historia disponible
-            last_p = df_p_all_sorted.iloc[-1]['Peso']
-            last_p_date = df_p_all_sorted.iloc[-1]['Fecha'].strftime('%d/%m/%y')
+# --- 3. RENDERIZADO DE SECCIONES DINÁMICAS ---
+# Obtener el último peso histórico REAL (independientemente del filtro de fechas)
+last_p = 76.0
+last_p_date = 'N/A'
+if not df_peso_full.empty and 'Fecha' in df_peso_full.columns:
+    # Usamos el DataFrame completo (df_peso_full), no el filtrado (df_p_f_full)
+    df_p_all_sorted = df_peso_full.dropna(subset=['Fecha']).sort_values('Fecha')
+    if not df_p_all_sorted.empty:
+        # Obtener el último peso de toda la historia disponible
+        last_p = df_p_all_sorted.iloc[-1]['Peso']
+        last_p_date = df_p_all_sorted.iloc[-1]['Fecha'].strftime('%d/%m/%y')
 
-    # Siempre mostrar tabs
-    if True:
-        # 1. Header de KPIs
-        # Pasamos df_p_f_full para cálculos de promedios en el rango, 
-        # pero last_p ya tiene el valor más reciente absoluto.
-        dashboard_components.render_kpi_header(df_s_f, df_p_f_full, last_p, last_p_date)
+# Siempre mostrar tabs
+# 1. Header de KPIs
+dashboard_components.render_kpi_header(df_s_f, df_p_f_full, last_p, last_p_date)
 
-    # 2. Coach Personal (Asistente de Recuperación Proactivo)
-    from trainer_assistant import TrainerAssistant
-    assistant = TrainerAssistant()
-    
-    # a) Pestañas del Asistente
-    tab_coach, tab_plan, tab_timeline, tab_chat = st.tabs(["💡 Estado y Consejos", "📅 Plan Semanal", "⏳ Bio-Timeline", "💬 Chat Coach"])
-    
-    with tab_coach:
-        dashboard_components.render_trainer_assistant(assistant, df_s_f, df_p_f_full)
-        with st.expander("Ver Perfil Clínico e Historial Médico"):
-            dashboard_components.render_medical_profile()
-            
-    with tab_plan:
-        dashboard_components.render_weekly_plan(assistant)
+# 2. Coach Personal (Asistente de Recuperación Proactivo)
+from trainer_assistant import TrainerAssistant
+assistant = TrainerAssistant()
 
-    with tab_timeline:
-        dashboard_components.render_bio_timeline_section(df_sport, assistant)
+# a) Pestañas del Asistente
+tab_coach, tab_plan, tab_timeline, tab_chat = st.tabs(["💡 Estado y Consejos", "📅 Plan Semanal", "⏳ Bio-Timeline", "💬 Chat Coach"])
+
+with tab_coach:
+    dashboard_components.render_trainer_assistant(assistant, df_s_f, df_p_f_full)
+    with st.expander("Ver Perfil Clínico e Historial Médico"):
+        dashboard_components.render_medical_profile()
         
-    with tab_chat:
-        dashboard_components.render_coach_chat(assistant)
+with tab_plan:
+    dashboard_components.render_weekly_plan(assistant)
 
-    # 3. Salud de Rodilla (Plotly interactivo)
-    # Mostramos la evolución completa para contexto, o filtrada según prefiera el usuario
-    dashboard_components.render_knee_health_section(df_s_f, df_p_f_full)
+with tab_timeline:
+    dashboard_components.render_bio_timeline_section(df_sport, assistant)
+    
+with tab_chat:
+    dashboard_components.render_coach_chat(assistant)
 
-    # 4. Gestión de Calzado (Barras de progreso)
-    # Usamos df_sport completo (sin filtrar por fecha) para ver el desgaste histórico acumulado
-    dashboard_components.render_shoe_management(df_sport)
+# 3. Salud de Rodilla (Plotly interactivo)
+dashboard_components.render_knee_health_section(df_s_f, df_p_f_full)
 
-    # 5. ROI y Eficiencia
-    dashboard_components.render_roi_section(df_s_f)
+# 4. Gestión de Calzado (Barras de progreso)
+dashboard_components.render_shoe_management(df_sport)
 
-    # 6. Datos Crudos y Exportación (Sección compacta)
-    st.divider()
-    st.header("🏃 Auditoría de Datos y Calendario")
-    with st.expander("Ver Historial de Pesos y Sesiones"):
-        t1, t2 = st.tabs(["Historial de Peso", "Sesiones Deportivas"])
-        with t1:
-            if not df_p_f_full.empty and 'Fecha' in df_p_f_full.columns:
-                st.dataframe(df_p_f_full.sort_values('Fecha', ascending=False), hide_index=True)
-            else:
-                st.info("No hay datos de peso disponibles")
-        with t2:
-            if not df_s_f.empty and 'Fecha' in df_s_f.columns:
-                st.dataframe(df_s_f.sort_values('Fecha', ascending=False), hide_index=True)
-            else:
-                st.info("No hay datos de actividades disponibles")
-            
-else:
-    st.warning("⚠️ No hay datos suficientes para el rango seleccionado. Por favor, amplía el filtro en la barra lateral o sincroniza la nube.")
+# 5. ROI y Eficiencia
+dashboard_components.render_roi_section(df_s_f)
+
+# 6. Datos Crudos y Exportación (Sección compacta)
+st.divider()
+st.header("🏃 Auditoría de Datos y Calendario")
+with st.expander("Ver Historial de Pesos y Sesiones"):
+    t1, t2 = st.tabs(["Historial de Peso", "Sesiones Deportivas"])
+    with t1:
+        if not df_p_f_full.empty and 'Fecha' in df_p_f_full.columns:
+            st.dataframe(df_p_f_full.sort_values('Fecha', ascending=False), hide_index=True)
+        else:
+            st.info("No hay datos de peso disponibles")
+    with t2:
+        if not df_s_f.empty and 'Fecha' in df_s_f.columns:
+            st.dataframe(df_s_f.sort_values('Fecha', ascending=False), hide_index=True)
+        else:
+            st.info("No hay datos de actividades disponibles")
 
 
 
