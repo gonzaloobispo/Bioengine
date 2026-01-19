@@ -114,7 +114,7 @@ CONTEXTO ACTUAL ({today}):
                 plan_summary = []
                 if current_plan and 'semana' in current_plan:
                     for d in current_plan.get('semana', []):
-                    plan_summary.append(f"{d['dia']} ({d['fecha']}): {d['actividad']} [{d['estado']}]")
+                        plan_summary.append(f"{d['dia']} ({d['fecha']}): {d['actividad']} [{d['estado']}]")
                 prompt += f"\n[PLAN SEMANAL]:\n" + "\n".join(plan_summary)
             if 'protocol' in context:
                  prompt += f"\n[PROTOCOLO MÉDICO VIGENTE]:\n{context['protocol'][:2000]}" # Limitamos por si acaso
@@ -164,5 +164,6 @@ O si es una consulta normal, solo responde texto.
             "action": action,
             "action_params": params
         }
+
 
 
