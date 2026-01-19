@@ -82,22 +82,21 @@ def fusionar_deportes():
     ]
 
     # 1. Garmin
-    ruta_garmin = os.path.join(config.DATA_PROCESSED, 'historial_garmin_raw.csv')
+    ruta_garmin = config.RAW_GARMIN_FILE
     if os.path.exists(ruta_garmin):
         df_g = pd.read_csv(ruta_garmin, sep=';')
         df_g['Fuente'] = df_g.get('Fuente', 'Garmin Cloud')
         fuentes.append(df_g)
 
-    # 2. Runkeeper
-    ruta_runkeeper = os.path.join(config.DATA_PROCESSED, 'historial_runkeeper_puro.csv')
+    # 2. Runkeeper (Legacy)
+    ruta_runkeeper = config.CSV_RUNKEEPER_LEGACY
     if os.path.exists(ruta_runkeeper):
         df_rk = pd.read_csv(ruta_runkeeper, sep=';')
         df_rk['Fuente'] = 'Runkeeper'
-        # No tiene mas que Distancia, Duracion, Tipo.
         fuentes.append(df_rk)
 
-    # 3. Apple
-    ruta_apple = os.path.join(config.DATA_PROCESSED, 'historial_apple_deportes.csv')
+    # 3. Apple (Legacy)
+    ruta_apple = config.CSV_APPLE_LEGACY
     if os.path.exists(ruta_apple):
         df_a = pd.read_csv(ruta_apple, sep=';')
         # Mapeo de columnas Apple -> Garmin Schema
@@ -110,9 +109,7 @@ def fusionar_deportes():
         df_a['Fuente'] = 'Apple'
         fuentes.append(df_a)
 
-    if not fuentes:
-        print("   ?? No hay fuentes deportivas disponibles para fusionar.")
-        return
+        print("   [INFO] No hay fuentes deportivas disponibles para fusionar.")
 
     df_all = pd.concat(fuentes, ignore_index=True)
     if 'Fecha' not in df_all.columns:
@@ -183,8 +180,8 @@ def actualizacion_rapida():
     print("INICIANDO INTEGRACION DE CALZADO Y CARRERAS...")
     
     # 1. Cargar el Calendario de Carreras
-    ruta_cal_csv = os.path.join(config.DATA_PROCESSED, 'calendario_gonzalo.csv')
-    ruta_cal_xlsx = os.path.join(config.DATA_PROCESSED, 'calendario_gonzalo.xlsx')
+    ruta_cal_csv = config.CSV_CALENDARIO
+    ruta_cal_xlsx = config.XLSX_CALENDARIO
     if os.path.exists(ruta_cal_xlsx):
         df_cal = pd.read_excel(ruta_cal_xlsx)
     elif os.path.exists(ruta_cal_csv):
@@ -283,7 +280,7 @@ def fusionar_peso_completo():
     COLUMNAS_PESO = ['Fecha', 'Peso', 'Grasa_Pct', 'Masa_Muscular_Kg', 'Fuente']
 
     # 1. Withings (Prioridad como estándar)
-    ruta_withings = os.path.join(config.DATA_PROCESSED, 'historial_withings_raw.csv')
+    ruta_withings = config.RAW_WITHINGS_FILE
     if os.path.exists(ruta_withings):
         df_w = pd.read_csv(ruta_withings, sep=';')
         if 'Fuente' not in df_w.columns:
@@ -291,7 +288,7 @@ def fusionar_peso_completo():
         fuentes.append(df_w)
 
     # 2. Histórico (PesoBook, Apple, etc.)
-    ruta_maestro_hist = os.path.join(config.DATA_PROCESSED, 'historial_completo_peso.csv')
+    ruta_maestro_hist = config.CSV_PESO_MAESTRO_HIST
     if os.path.exists(ruta_maestro_hist):
         df_h = pd.read_csv(ruta_maestro_hist, sep=';')
         fuentes.append(df_h)
@@ -344,9 +341,9 @@ def fusionar_peso_completo():
 def fusionar_peso():
     print("INICIANDO FUSION DE DATOS DE PESO (Solo APIs)...")
     
-    ruta_raw = os.path.join(config.DATA_PROCESSED, 'historial_withings_raw.csv')
+    ruta_raw = config.RAW_WITHINGS_FILE
     if not os.path.exists(ruta_raw):
-        print("   ⚠️ No hay datos raw de Withings para fusionar.")
+        print("   [WARNING] No hay datos raw de Withings para fusionar.")
         return
     
     df_raw = pd.read_csv(ruta_raw, sep=';')

@@ -9,7 +9,7 @@ class ContextManager:
     """
     
     def __init__(self):
-        self.context_file = os.path.join(config.BASE_DIR, 'data_cloud_sync', 'user_context.json')
+        self.context_file = config.USER_CONTEXT_FILE
         self.context = self._load_context()
     
     def _load_context(self):
@@ -280,7 +280,7 @@ class ContextManager:
                             stats['peso_promedio_kg'] = round(pesos.mean(), 1)
             
             # 3. CALCULAR DÍAS CON DOLOR (desde dolor_rodilla.json)
-            dolor_file = os.path.join(config.BASE_DIR, 'data_cloud_sync', 'dolor_rodilla.json')
+            dolor_file = config.DOLOR_RODILLA_FILE
             if os.path.exists(dolor_file):
                 with open(dolor_file, 'r', encoding='utf-8') as f:
                     dolor_data = json.load(f)
@@ -300,7 +300,7 @@ class ContextManager:
             
             # 4. CALCULAR ADHERENCIA AL PLAN (aproximada)
             # Si hay plan_entrenamiento.json, comparar días con actividad vs días planificados
-            plan_file = os.path.join(config.BASE_DIR, 'config', 'plan_entrenamiento.json')
+            plan_file = config.PLAN_ENTRENAMIENTO_FILE
             if os.path.exists(plan_file):
                 with open(plan_file, 'r', encoding='utf-8') as f:
                     plan = json.load(f)

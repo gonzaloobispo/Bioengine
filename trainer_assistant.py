@@ -10,22 +10,22 @@ class TrainerAssistant:
     def __init__(self):
         self.medical_history = self._load_medical_history()
         self.inventory = self._load_inventory()
-        self.plan_file = os.path.join(config.BASE_DIR, 'config', 'plan_entrenamiento.json')
+        self.plan_file = config.PLAN_ENTRENAMIENTO_FILE
         self.protocol_file = os.path.join(config.BASE_DIR, 'config', 'protocolo_medico.md')
         self.current_plan = self._load_current_plan()
         self.protocol = self._load_protocol()
-        self.data_processed = config.DATA_PROCESSED
+        self.data_processed = config.SYNC_DATA
         self.brain = LlmClient() # Cerebro Gemini
     
     def _load_medical_history(self):
-        ruta = os.path.join(config.BASE_DIR, 'config', 'historial_medico.json')
+        ruta = config.HISTORIAL_MEDICO_FILE
         if os.path.exists(ruta):
             with open(ruta, 'r', encoding='utf-8') as f:
                 return json.load(f)
         return None
 
     def _load_inventory(self):
-        ruta = os.path.join(config.BASE_DIR, 'config', 'inventario.json')
+        ruta = config.INVENTARIO_FILE
         if os.path.exists(ruta):
             with open(ruta, 'r', encoding='utf-8') as f:
                 return json.load(f)

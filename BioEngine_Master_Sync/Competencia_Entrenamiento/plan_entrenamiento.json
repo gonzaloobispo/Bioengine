@@ -1,0 +1,83 @@
+{
+    "semana_inicio": "2026-01-19",
+    "fase_actual": "Rehabilitación (Fase 1)",
+    "dias": [
+        {
+            "fecha": "2026-01-19",
+            "dia": "Lunes",
+            "actividad": "Descanso Total",
+            "duracion_obj_min": 0,
+            "intensidad": "-",
+            "equipo_sugerido": "-",
+            "notas": "Permite que la inflamación baje.",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        },
+        {
+            "fecha": "2026-01-20",
+            "dia": "Martes",
+            "actividad": "Fuerza / Hipertrofia (Prot. Articular)",
+            "duracion_obj_min": 45,
+            "intensidad": "Carga Media Controlada",
+            "equipo_sugerido": "Mancuernas 5kg + Colchoneta",
+            "notas": "**Rutina A (Empuje/Cuádriceps Seguro):**\n1. Sentadilla Isométrica en Pared (4x45s)\n2. Press de Hombros Sentado (4x12)\n3. Floor Press (Pecho) (4x12)\n4. Elevación Talones (Gemelos) (4x20)\n5. Deadbug (Core) (3x15)",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        },
+        {
+            "fecha": "2026-01-21",
+            "dia": "Miércoles",
+            "actividad": "Ciclismo Reg. / Movilidad",
+            "duracion_obj_min": 25,
+            "intensidad": "Z1 | 85-90 RPM",
+            "equipo_sugerido": "Trek FX Sport AL 3",
+            "notas": "Meta: ~8.5km. Cadencia alta vital para lubricar rodilla sin carga.",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        },
+        {
+            "fecha": "2026-01-22",
+            "dia": "Jueves",
+            "actividad": "Fuerza / Hipertrofia (Prot. Articular)",
+            "duracion_obj_min": 45,
+            "intensidad": "Carga Media Controlada",
+            "equipo_sugerido": "Mancuernas 5kg + Colchoneta",
+            "notas": "**Rutina B (Tracción/Cadena Posterior):**\n1. Peso Muerto Rumano c/mancuernas (4x12)\n2. Remo Unilateral (4x12)\n3. Puente Glúteo Isométrico (4x45s)\n4. Curl Bíceps (3x15)\n5. Plancha Lateral (3x30s)",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        },
+        {
+            "fecha": "2026-01-23",
+            "dia": "Viernes",
+            "actividad": "Descanso Total",
+            "duracion_obj_min": 0,
+            "intensidad": "-",
+            "equipo_sugerido": "-",
+            "notas": "Permite que la inflamación baje.",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        },
+        {
+            "fecha": "2026-01-24",
+            "dia": "Sábado",
+            "actividad": "Fuerza / Hipertrofia (Prot. Articular)",
+            "duracion_obj_min": 45,
+            "intensidad": "Carga Media Controlada",
+            "equipo_sugerido": "Mancuernas 5kg + Colchoneta",
+            "notas": "**Rutina A (Empuje/Cuádriceps Seguro):**\n1. Sentadilla Isométrica en Pared (4x45s)\n2. Press de Hombros Sentado (4x12)\n3. Floor Press (Pecho) (4x12)\n4. Elevación Talones (Gemelos) (4x20)\n5. Deadbug (Core) (3x15) + 20 min Caminata (Opcional)",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        },
+        {
+            "fecha": "2026-01-25",
+            "dia": "Domingo",
+            "actividad": "Descanso Total",
+            "duracion_obj_min": 0,
+            "intensidad": "-",
+            "equipo_sugerido": "-",
+            "notas": "Permite que la inflamación baje.",
+            "estado": "Pendiente",
+            "cumplimiento_real": null
+        }
+    ]
+}

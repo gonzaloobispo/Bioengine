@@ -7,6 +7,7 @@ import requests
 import time
 from garminconnect import Garmin
 import config
+from drive_sync import DriveSyncManager
 
 # ==========================================
 # 🛰️ MÓDULO GARMIN
@@ -199,7 +200,7 @@ def sync_withings_module():
         df_new = pd.DataFrame(nuevos)
         df_new['Fuente'] = 'Withings Cloud'
         print(f"      Nuevos registros Withings: {len(nuevos)} - Fechas: {df_new['Fecha'].tolist() if not df_new.empty else 'Ninguna'}")
-        ruta_out = os.path.join(config.DATA_PROCESSED, 'historial_withings_raw.csv')
+        ruta_out = os.path.join(config.SYNC_DATA, 'historial_withings_raw.csv')
         if os.path.exists(ruta_out):
             df_old = pd.read_csv(ruta_out, sep=';')
             df_final = pd.concat([df_old, df_new], ignore_index=True)
@@ -240,7 +241,20 @@ def sincronizar_todo():
     except Exception as e:
         print(f"   [WARNING] Error en analisis automatico: {e}")
     
-    return f"{res_garmin} | {res_withings}"
+    # Sincronización con Google Drive
+    res_drive = "[INFO] Drive omitido (sin client_secrets.json)"
+    if os.path.exists('client_secrets.json') or os.path.exists('mycreds.txt'):
+        try:
+            print("   ☁️ Sincronizando con Google Drive...")
+            drive_mgr = DriveSyncManager()
+            if drive_mgr.full_sync_to_cloud():
+                res_drive = "[OK] Drive sincronizado."
+            else:
+                res_drive = "[ERROR] Falló sync Drive."
+        except Exception as e:
+            res_drive = f"[ERROR] Drive: {e}"
+    
+    return f"{res_garmin} | {res_withings} | {res_drive}"
 
 if __name__ == "__main__":
     print(sincronizar_todo())

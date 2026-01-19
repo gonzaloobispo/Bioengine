@@ -1,0 +1,108 @@
+{
+    "bicicletas": [
+        {
+            "modelo": "Trek FX Sport AL 3",
+            "tipo": "Híbrida / Ruta",
+            "sensores": [
+                "Velocidad Garmin",
+                "Cadencia Garmin"
+            ],
+            "estado": "Operativo",
+            "uso_recomendado": "Cardio de bajo impacto, Recuperación de rodilla"
+        }
+    ],
+    "fuerza": [
+        {
+            "item": "Mancuernas",
+            "cantidad": 2,
+            "peso_kg": 5,
+            "uso_recomendado": "Rehabilitación epicondilitis, Fuerza tren superior"
+        }
+    ],
+    "accesorios": [
+        {
+            "item": "Chaleco Hidratación Aonijie",
+            "uso_recomendado": "Salidas > 60 min o días de calor"
+        },
+        {
+            "item": "Pantorrilleras Compresión Aonijie",
+            "uso_recomendado": "Recuperación post-actividad o tiradas largas"
+        },
+        {
+            "item": "Medias Compresión (Bajas)",
+            "uso_recomendado": "Circulación en salidas intensas"
+        },
+        {
+            "item": "Sombrero Adidas",
+            "uso_recomendado": "Protección solar en exteriores"
+        },
+        {
+            "item": "Remera técnica",
+            "uso_recomendado": "Control de temperatura y humedad"
+        }
+    ],
+    "tecnologia": [
+        {
+            "dispositivo": "Garmin Forerunner 965",
+            "tipo": "Reloj GPS",
+            "funciones_clave": [
+                "VFC",
+                "Carga de Entrenamiento",
+                "Body Battery"
+            ]
+        },
+        {
+            "dispositivo": "Báscula Withings",
+            "tipo": "Biometría",
+            "funciones_clave": [
+                "Peso",
+                "Composición Corporal"
+            ]
+        }
+    ],
+    "calzado": {
+        "running_calle": [
+            {
+                "modelo": "ASICS Kayano 31",
+                "tipo": "Estabilidad (Pronador)",
+                "estado": "Activo",
+                "uso_principal": "Rodajes largos, Asfalto"
+            },
+            {
+                "modelo": "Brooks Adrenaline GTS 23",
+                "tipo": "Estabilidad (Pronador)",
+                "estado": "Reserva / Rotación",
+                "uso_principal": "Rodajes suaves"
+            }
+        ],
+        "trail": [
+            {
+                "modelo": "Hoka Speedgoat 6",
+                "tipo": "Trail / Amortiguación Máxima",
+                "estado": "Activo",
+                "uso_principal": "Terreno irregular técnico, Trekking"
+            },
+            {
+                "modelo": "New Balance Garoe",
+                "tipo": "Trail / All Terrain",
+                "estado": "Activo",
+                "uso_principal": "Senderos fáciles, caminos de tierra"
+            }
+        ],
+        "tenis": [
+            {
+                "modelo": "Babolat Fury 3",
+                "tipo": "Court (Soporte lateral)",
+                "estado": "Activo",
+                "uso_principal": "Partidos de Tenis"
+            }
+        ]
+    },
+    "medico": [
+        {
+            "item": "Plantillas Ortopédicas Personalizadas",
+            "obligatorio": true,
+            "motivo": "Pie Plano Severo / Pronación"
+        }
+    ]
+}

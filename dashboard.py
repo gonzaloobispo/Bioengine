@@ -220,9 +220,9 @@ if st.sidebar.button("🗑️ Resetear"):
         # Borrar solo archivos de APIs (mantener historicos)
         files_to_delete = [
             config.CSV_PESO_MAESTRO_APIS,
-            os.path.join(config.DATA_PROCESSED, 'historial_withings_raw.csv'),
-            os.path.join(config.DATA_PROCESSED, 'historial_garmin_raw.csv'),
-            os.path.join(config.DATA_PROCESSED, 'historial_deportivo_total_full.csv')
+            config.WITHINGS_TOKEN_FILE, # Borrar tokens para forzar re-login si falla
+            config.RAW_GARMIN_FILE,
+            config.CSV_DEPORTE_MAESTRO
         ]
         for file in files_to_delete:
             if os.path.exists(file):
