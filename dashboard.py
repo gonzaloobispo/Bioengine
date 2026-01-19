@@ -62,6 +62,7 @@ if st.session_state.get("authentication_status") == False:
     st.error('Usuario/Contraseña incorrectos')
     st.stop()
 elif st.session_state.get("authentication_status") == None:
+    st.info('💡 Tu sesión se mantendrá activa por 90 días (mientras no borres las cookies)')
     st.warning('Por favor ingresa tu usuario y contraseña')
     st.stop()
 
