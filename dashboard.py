@@ -54,6 +54,10 @@ authenticator = stauth.Authenticate(
     cookie_expiry_days=90  # Sesión persistente por 90 días
 )
 
+# Mostrar info sobre sesión persistente antes del login
+if not st.session_state.get('authentication_status'):
+    st.info('🔐 **Sesión Persistente Activada**: Una vez que inicies sesión, permanecerás logueado por 90 días (mientras no borres las cookies del navegador)')
+
 # Call login - this renders the login form
 authenticator.login()
 
