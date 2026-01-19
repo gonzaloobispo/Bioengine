@@ -1,5 +1,11 @@
 # 🎯 ESTADO ACTUAL DEL PROYECTO - BioEngine (Actualizado: 19-01-2026)
 
+> **📢 PARA ASISTENTES IA:** Este archivo contiene el estado REAL y ACTUAL del proyecto.  
+> **IMPORTANTE:** Al finalizar cualquier sesión de trabajo, **RECUERDA AL USUARIO** actualizar este archivo con los cambios realizados.  
+> Sugiere: *"¿Actualizamos ESTADO_ACTUAL.md con los cambios de hoy antes de terminar?"*
+
+---
+
 ## ✅ **FUNCIONALIDADES COMPLETADAS**
 
 ### **CORE SYSTEM (100% Operativo)**
