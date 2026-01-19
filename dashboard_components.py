@@ -462,40 +462,45 @@ def render_coach_chat(assistant):
         # NUEVO: Logging automático de conversaciones importantes
         try:
             from context_manager import ContextManager
+            from llm_client import LLMClient
             
             # Detectar si la conversación es importante para guardar
             es_importante = False
-            aprendizaje = ""
+            tipo_conversacion = ""
             
             # Criterios de importancia:
             if plan_modificado:
                 es_importante = True
-                aprendizaje = f"Usuario solicitó cambio de plan: {prompt[:80]}"
+                tipo_conversacion = "modificacion_plan"
             
             elif any(kw in prompt.lower() for kw in keywords_dolor):
                 es_importante = True
-                aprendizaje = f"Usuario reportó estado de rodilla"
+                tipo_conversacion = "reporte_medico"
             
             elif any(palabra in prompt.lower() for palabra in ["recomienda", "debería", "consejo", "qué hacer", "cómo"]):
                 # Consultas que requieren recomendación personalizada
                 if len(reply_text) > 100:  # Solo si la respuesta es sustancial
                     es_importante = True
-                    aprendizaje = f"Consulta personalizada: {prompt[:80]}"
+                    tipo_conversacion = "consulta_personalizada"
             
             elif "correlación" in reply_text.lower() or "patrón" in reply_text.lower():
                 # El asistente detectó un patrón o correlación
                 es_importante = True
-                aprendizaje = "Asistente identificó patrón o correlación"
+                tipo_conversacion = "insight_patron"
             
             # Guardar si es importante
             if es_importante:
+                # RESUMIR con LLM antes de guardar
+                llm = LLMClient()
+                resumen = llm.summarize_conversation(prompt, reply_text)
+                
                 ctx = ContextManager()
                 ctx.log_conversation_learning(
-                    summary=prompt[:150],  # Primeros 150 chars del mensaje
-                    learning=aprendizaje,
-                    context_note=reply_text[:200] if len(reply_text) > 200 else reply_text
+                    summary=resumen,  # Resumen generado por LLM
+                    learning=f"[{tipo_conversacion}] {resumen[:100]}",
+                    context_note=""  # Ya no guardamos el contexto completo
                 )
-                print(f"[CONV] Conversación importante guardada: {aprendizaje}")
+                print(f"[CONV] Guardado: {resumen}")
                 
         except Exception as e:
             # No fallar si hay error en logging

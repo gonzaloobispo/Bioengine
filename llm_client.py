@@ -29,6 +29,53 @@ class LlmClient:
         
         # 2. Env Var
         return os.environ.get('GEMINI_API_KEY')
+    
+    def summarize_conversation(self, user_message, assistant_response):
+        """
+        Resume una conversación usando el LLM, extrayendo solo puntos clave y decisiones
+        Retorna un resumen conciso sin charla innecesaria
+        """
+        try:
+            prompt = f"""
+Eres un asistente que resume conversaciones médicas/deportivas.
+
+CONVERSACIÓN:
+Usuario: {user_message}
+Asistente: {assistant_response}
+
+TAREA:
+Resume esta conversación en máximo 2-3 líneas, incluyendo SOLO:
+1. Decisión o cambio importante (si hubo)
+2. Información médica relevante (dolor, síntoma, etc.)
+3. Recomendación clave dada
+
+FORMATO DE SALIDA:
+- Una sola frase por punto
+- Eliminar saludos, agradecimientos, charla innecesaria
+- Ser extremadamente conciso
+
+EJEMPLO:
+Usuario solicitó cambiar rutina a Ciclismo. Reportó dolor rodilla 3/10. Recomendación: reducir impacto próximos 3 días.
+
+RESUMEN:
+"""
+            
+            response = self.client.models.generate_content(
+                model='gemini-2.0-flash-exp',
+                contents=prompt
+            )
+            
+            summary = response.text.strip()
+            
+            # Limitar a 200 caracteres máximo
+            if len(summary) > 200:
+                summary = summary[:197] + "..."
+            
+            return summary
+            
+        except Exception as e:
+            # Si falla el resumen, retornar versión simple
+            return f"{user_message[:80]}... {assistant_response[:80]}..."
 
     def send_message(self, user_message, context_data=None, conversation_history=None):
         if not self.client:
