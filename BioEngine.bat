@@ -3,15 +3,41 @@ title Lanzador Bio-Engine Gonzalo
 cls
 cd /d "C:\BioEngine_Gonzalo"
 
-echo Iniciando Bio-Engine...
-echo  Paso 1: Sincronizando datos de Nube y Calzado...
-python super_merger.py
+echo ======================================================
+echo          Bio-Engine: Inteligencia Biomecanica
+echo ======================================================
+echo.
+echo 1. Abrir Dashboard en la NUBE (Recomendado)
+echo 2. Abrir Dashboard LOCAL (Para mantenimiento/dev)
+echo 3. Solo Sincronizar Datos (Sin abrir navegador)
+echo 4. Salir
+echo.
+set /p choice="Selecciona una opcion (1-4): "
 
-echo  Paso 2: Generando Plan Semanal Inteligente (Fase: Rehab/Construccion)...
-python init_plan.py
+if "%choice%"=="1" (
+    echo Lanzando Dashboard en la Nube...
+    start https://bioengine-gonzalo.streamlit.app
+    goto end
+)
 
-echo  Paso 3: Lanzando Dashboard en el navegador...
-start /b python -m streamlit run dashboard.py
+if "%choice%"=="2" (
+    echo Sincronizando datos locales...
+    python super_merger.py
+    echo Lanzando Dashboard Local...
+    start /b python -m streamlit run dashboard.py
+    goto end
+)
 
-echo ✅ Todo listo. Podes cerrar esta ventana cuando termines de usar el Dashboard.
-pause
+if "%choice%"=="3" (
+    echo Sincronizando datos locales...
+    python super_merger.py
+    echo Sincronizacion completada.
+    pause
+    goto end
+)
+
+if "%choice%"=="4" exit
+
+:end
+echo ✅ Proceso finalizado.
+timeout /t 5

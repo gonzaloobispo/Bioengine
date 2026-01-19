@@ -1,9 +1,9 @@
 {
-    "semana_inicio": "2026-01-12",
+    "semana_inicio": "2026-01-19",
     "fase_actual": "Rehabilitación (Fase 1)",
     "dias": [
         {
-            "fecha": "2026-01-12",
+            "fecha": "2026-01-19",
             "dia": "Lunes",
             "actividad": "Descanso Total",
             "duracion_obj_min": 0,
@@ -14,7 +14,7 @@
             "cumplimiento_real": null
         },
         {
-            "fecha": "2026-01-13",
+            "fecha": "2026-01-20",
             "dia": "Martes",
             "actividad": "Fuerza / Hipertrofia (Prot. Articular)",
             "duracion_obj_min": 45,
@@ -25,7 +25,7 @@
             "cumplimiento_real": null
         },
         {
-            "fecha": "2026-01-14",
+            "fecha": "2026-01-21",
             "dia": "Miércoles",
             "actividad": "Ciclismo Reg. / Movilidad",
             "duracion_obj_min": 25,
@@ -36,7 +36,7 @@
             "cumplimiento_real": null
         },
         {
-            "fecha": "2026-01-15",
+            "fecha": "2026-01-22",
             "dia": "Jueves",
             "actividad": "Fuerza / Hipertrofia (Prot. Articular)",
             "duracion_obj_min": 45,
@@ -47,7 +47,7 @@
             "cumplimiento_real": null
         },
         {
-            "fecha": "2026-01-16",
+            "fecha": "2026-01-23",
             "dia": "Viernes",
             "actividad": "Descanso Total",
             "duracion_obj_min": 0,
@@ -58,7 +58,7 @@
             "cumplimiento_real": null
         },
         {
-            "fecha": "2026-01-17",
+            "fecha": "2026-01-24",
             "dia": "Sábado",
             "actividad": "Fuerza / Hipertrofia (Prot. Articular)",
             "duracion_obj_min": 45,
@@ -69,7 +69,7 @@
             "cumplimiento_real": null
         },
         {
-            "fecha": "2026-01-18",
+            "fecha": "2026-01-25",
             "dia": "Domingo",
             "actividad": "Descanso Total",
             "duracion_obj_min": 0,

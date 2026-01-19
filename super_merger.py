@@ -72,25 +72,42 @@ def _format_columns_es(df, column_decimals):
     return df
 
 def fusionar_deportes():
-    print("INICIANDO FUSION DE DATOS DEPORTIVOS (Todas las Fuentes)...")
+    print("INICIANDO FUSION DE DATOS DEPORTIVOS (Normalización Completa)...")
     fuentes = []
 
+    # Schema unificado basado en Garmin API
+    COLUMNAS_MAESTRAS = [
+        'Fecha', 'Tipo', 'Distancia (km)', 'Duracion (min)', 'Calorias', 
+        'FC Media', 'FC Max', 'Elevacion (m)', 'Cadencia_Media', 'Fuente'
+    ]
+
+    # 1. Garmin
     ruta_garmin = os.path.join(config.DATA_PROCESSED, 'historial_garmin_raw.csv')
     if os.path.exists(ruta_garmin):
         df_g = pd.read_csv(ruta_garmin, sep=';')
-        df_g['Fuente'] = df_g.get('Fuente_Origen', 'Garmin')
+        df_g['Fuente'] = df_g.get('Fuente', 'Garmin Cloud')
         fuentes.append(df_g)
 
+    # 2. Runkeeper
     ruta_runkeeper = os.path.join(config.DATA_PROCESSED, 'historial_runkeeper_puro.csv')
     if os.path.exists(ruta_runkeeper):
         df_rk = pd.read_csv(ruta_runkeeper, sep=';')
-        df_rk['Fuente'] = df_rk.get('Fuente', 'Runkeeper')
+        df_rk['Fuente'] = 'Runkeeper'
+        # No tiene mas que Distancia, Duracion, Tipo.
         fuentes.append(df_rk)
 
+    # 3. Apple
     ruta_apple = os.path.join(config.DATA_PROCESSED, 'historial_apple_deportes.csv')
     if os.path.exists(ruta_apple):
         df_a = pd.read_csv(ruta_apple, sep=';')
-        df_a['Fuente'] = df_a.get('Fuente', 'Apple Health')
+        # Mapeo de columnas Apple -> Garmin Schema
+        mapping_apple = {
+            'Distancia_km': 'Distancia (km)',
+            'Duracion_min': 'Duracion (min)',
+            'Fuente': 'Fuente'
+        }
+        df_a = df_a.rename(columns=mapping_apple)
+        df_a['Fuente'] = 'Apple'
         fuentes.append(df_a)
 
     if not fuentes:
@@ -99,44 +116,65 @@ def fusionar_deportes():
 
     df_all = pd.concat(fuentes, ignore_index=True)
     if 'Fecha' not in df_all.columns:
-        print("   ?? No se encontr¢ columna Fecha en los datos deportivos.")
+        print("   ?? No se encontró columna Fecha en los datos deportivos.")
         return
 
+    # Normalización de Fechas
     df_all['Fecha'] = _parse_fecha_mixta(df_all['Fecha'])
     df_all = df_all.dropna(subset=['Fecha'])
 
-    # Normalización de categorías y fuentes
+    # Normalización de Categorías y Fuentes
     if 'Tipo' in df_all.columns:
         df_all['Tipo'] = _normalize_tipo_actividad(df_all['Tipo'])
     if 'Fuente' in df_all.columns:
         df_all['Fuente'] = _normalize_fuente_labels(df_all['Fuente'])
 
-    for col in ['Tipo', 'Distancia (km)', 'Duracion (min)', 'Calorias']:
+    # Mapeo de columnas alternativas que puedan haber quedado
+    alt_mappings = {
+        'Average Heart Rate (bpm)': 'FC Media',
+        'Average Heart Rate': 'FC Media',
+        'Average HR': 'FC Media',
+        'Climb (m)': 'Elevacion (m)',
+        'Elevation Gain': 'Elevacion (m)',
+        'Max HR': 'FC Max',
+        'Average Speed (km/h)': 'Velocidad Media' # Opcional, pero Garmin lo da
+    }
+    df_all = df_all.rename(columns=alt_mappings)
+
+    # Asegurar que existan todas las columnas maestras
+    for col in COLUMNAS_MAESTRAS:
         if col not in df_all.columns:
             df_all[col] = None
 
+    # Eliminar información innecesaria (columnas que no están en el schema maestro o calculado posteriormente)
+    # Mantener columnas que usará el proceso de calzado/stress después
+    columnas_a_mantener = COLUMNAS_MAESTRAS + ['Calzado', 'Evento_Nombre', 'Stress_Score']
+    
+    # Filtrar solo columnas existentes que queremos
+    cols_presentes = [c for c in df_all.columns if c in columnas_a_mantener]
+    df_all = df_all[cols_presentes]
+
+    # Ordenar y deduplicar
     df_all = df_all.sort_values('Fecha', ascending=False)
+    # Dedupe por fecha, tipo y distancia (para evitar solapamientos entre fuentes)
     df_all = df_all.drop_duplicates(subset=['Fecha', 'Tipo', 'Distancia (km)'], keep='first')
 
-
+    # Formateo final
     df_all = _format_columns_es(df_all, {
         'Distancia (km)': 2,
         'Duracion (min)': 1,
         'Calorias': 0,
         'FC Media': 0,
+        'FC Max': 0,
         'Elevacion (m)': 0,
         'Cadencia_Media': 0,
-        'Oscilacion_Vertical': 2,
-        'Tiempo_Contacto': 2,
-        'FC_Max': 0,
-        'Training_Effect': 2,
-        'Distancia_km': 2,
-        'Duracion_min': 1,
-        'Average Speed (km/h)': 2,
-        'Climb (m)': 0,
-        'Average Heart Rate (bpm)': 0,
-        'Stress_Score': 2,
+        'Stress_Score': 2
     })
+    
+    # Reordenar columnas para que se vea limpio
+    final_cols = [c for c in COLUMNAS_MAESTRAS if c in df_all.columns]
+    df_all = df_all[final_cols]
+
     df_all.to_csv(config.CSV_DEPORTE_MAESTRO, sep=';', index=False)
     print(f"Fusion deportiva completada. Total registros: {len(df_all)}")
 
@@ -239,9 +277,12 @@ def actualizacion_rapida():
 
 
 def fusionar_peso_completo():
-    print("INICIANDO FUSION DE PESO (APIs + Historicos)...")
+    print("INICIANDO FUSION DE PESO (Integración y Limpieza)...")
     fuentes = []
+    
+    COLUMNAS_PESO = ['Fecha', 'Peso', 'Grasa_Pct', 'Masa_Muscular_Kg', 'Fuente']
 
+    # 1. Withings (Prioridad como estándar)
     ruta_withings = os.path.join(config.DATA_PROCESSED, 'historial_withings_raw.csv')
     if os.path.exists(ruta_withings):
         df_w = pd.read_csv(ruta_withings, sep=';')
@@ -249,6 +290,7 @@ def fusionar_peso_completo():
             df_w['Fuente'] = 'Withings Cloud'
         fuentes.append(df_w)
 
+    # 2. Histórico (PesoBook, Apple, etc.)
     ruta_maestro_hist = os.path.join(config.DATA_PROCESSED, 'historial_completo_peso.csv')
     if os.path.exists(ruta_maestro_hist):
         df_h = pd.read_csv(ruta_maestro_hist, sep=';')
@@ -260,34 +302,44 @@ def fusionar_peso_completo():
 
     df_all = pd.concat(fuentes, ignore_index=True)
     if 'Fecha' not in df_all.columns:
-        print("   ?? No se encontr¢ columna Fecha en los datos de peso.")
+        print("   ?? No se encontró columna Fecha en los datos de peso.")
         return
 
+    # Normalización de Fechas
     df_all['Fecha'] = _parse_fecha_mixta(df_all['Fecha'])
     df_all = df_all.dropna(subset=['Fecha'])
 
-    # Normalizar columnas
-    for col in ['Peso', 'Grasa_Pct', 'Masa_Muscular_Kg', 'Fuente']:
+    # Asegurar columnas estándar
+    for col in COLUMNAS_PESO:
         if col not in df_all.columns:
             df_all[col] = None
+
+    # Normalización de Fuente
     df_all['Fuente'] = df_all['Fuente'].fillna('Withings Cloud')
-    df_all['Fuente'] = df_all['Fuente'].astype(str).str.strip().replace('', 'Withings Cloud')
+    df_all['Fuente'] = df_all['Fuente'].astype(str).str.strip().replace(['', 'nan'], 'Withings Cloud')
     df_all['Fuente'] = _normalize_fuente_labels(df_all['Fuente'])
 
-    # Dedupe por dia: preferir ultimo registro del dia
+    # Eliminar información redundante (mantener solo schema básico)
+    df_all = df_all[COLUMNAS_PESO]
+
+    # Dedupe por día: preferir el último registro del día (el más reciente)
     df_all['Fecha_dia'] = df_all['Fecha'].dt.date
     df_all = df_all.sort_values('Fecha')
     df_all = df_all.drop_duplicates(subset=['Fecha_dia'], keep='last')
     df_all = df_all.drop(columns=['Fecha_dia'])
+    
+    # Ordenar cronológicamente descendente
     df_all = df_all.sort_values('Fecha', ascending=False)
 
+    # Formateo numérico
     df_all = _format_columns_es(df_all, {
         'Peso': 2,
         'Grasa_Pct': 2,
         'Masa_Muscular_Kg': 2,
     })
+
     df_all.to_csv(config.CSV_PESO_MAESTRO, sep=';', index=False)
-    print(f"Fusion de peso completa. Total registros: {len(df_all)}")
+    print(f"Fusion de peso completa. Registros finales: {len(df_all)}")
 
 def fusionar_peso():
     print("INICIANDO FUSION DE DATOS DE PESO (Solo APIs)...")

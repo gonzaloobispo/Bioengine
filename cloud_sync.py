@@ -75,6 +75,10 @@ def sync_garmin_module():
                 'Distancia (km)': round(act.get('distance', 0) / 1000.0, 2),
                 'Duracion (min)': round(act.get('duration', 0) / 60.0, 1),
                 'Calorias': act.get('calories', 0),
+                'FC Media': act.get('averageHR', None),
+                'FC Max': act.get('maxHR', None),
+                'Elevacion (m)': act.get('totalElevationGain', None),
+                'Cadencia_Media': act.get('averageRunningCadence', None) or act.get('averageBikeCadence', None),
                 'Fuente': 'Garmin Cloud'
             })
             
