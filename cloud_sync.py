@@ -221,8 +221,21 @@ def sincronizar_todo():
         print("   📊 Recalculando estadísticas del usuario...")
         ctx_mgr = ContextManager()
         ctx_mgr.recalculate_stats_from_csv()
+        
+        # Detectar patrones automáticamente
+        print("   🔍 Detectando patrones...")
+        from pattern_detector import PatternDetector
+        detector = PatternDetector(ctx_mgr)
+        patterns = detector.analyze_all_patterns()
+        
+        if patterns:
+            print(f"   [OK] {len(patterns)} patrones encontrados")
+            ctx_mgr.update_insights_from_patterns(patterns)
+        else:
+            print("   [INFO] No se detectaron patrones nuevos")
+            
     except Exception as e:
-        print(f"   ⚠️ Error actualizando contexto: {e}")
+        print(f"   [WARNING] Error en analisis automatico: {e}")
     
     return f"{res_garmin} | {res_withings}"
 

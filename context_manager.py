@@ -111,6 +111,43 @@ class ContextManager:
         self._save_context()
         return True
     
+    def update_insights_from_patterns(self, detected_patterns):
+        """
+        Actualiza insights desde patrones detectados automáticamente
+        Solo guarda patrones con confianza > 75%
+        """
+        if not detected_patterns:
+            return False
+        
+        saved_count = 0
+        for pattern in detected_patterns:
+            confidence = pattern.get('confidence', 0)
+            
+            # Solo guardar si confianza es suficiente
+            if confidence >= 75:
+                # Verificar que no exista ya (evitar duplicados)
+                existing = self.context.get('insights_aprendidos', [])
+                pattern_desc = pattern.get('description', '')
+                
+                # Buscar si ya existe este patrón
+                already_exists = any(
+                    insight.get('patron', '') == pattern_desc 
+                    for insight in existing
+                )
+                
+                if not already_exists:
+                    self.add_insight(
+                        pattern=pattern.get('description', ''),
+                        action=pattern.get('recommendation', ''),
+                        confidence=confidence
+                    )
+                    saved_count += 1
+        
+        if saved_count > 0:
+            print(f"[OK] {saved_count} nuevos insights guardados")
+        
+        return saved_count > 0
+    
     def log_conversation_learning(self, summary, learning, context_note=""):
         """
         Registra aprendizajes de conversaciones
