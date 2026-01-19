@@ -120,6 +120,8 @@ CONTEXTO ACTUAL ({today}):
                  prompt += f"\n[PROTOCOLO MÉDICO VIGENTE]:\n{context['protocol'][:2000]}" # Limitamos por si acaso
             if 'inventory' in context:
                  prompt += f"\n[EQUIPO]:\n{json.dumps(context['inventory'], ensure_ascii=False)[:1000]}"
+             if 'recent_activities' in context and context['recent_activities']:
+                 prompt += f"\\n[ACTIVIDADES RECIENTES]:\\n{json.dumps(context['recent_activities'], ensure_ascii=False, indent=2)[:3000]}"
 
         prompt += """
 \nINSTRUCCIONES DE RESPUESTA:
@@ -162,3 +164,4 @@ O si es una consulta normal, solo responde texto.
             "action": action,
             "action_params": params
         }
+
