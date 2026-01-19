@@ -214,6 +214,16 @@ def sincronizar_todo():
     print("\n☁️ INICIANDO SINCRONIZACIÓN TOTAL...")
     res_garmin = sync_garmin_module()
     res_withings = sync_withings_module()
+    
+    # Auto-actualizar estadísticas del contexto del usuario
+    try:
+        from context_manager import ContextManager
+        print("   📊 Recalculando estadísticas del usuario...")
+        ctx_mgr = ContextManager()
+        ctx_mgr.recalculate_stats_from_csv()
+    except Exception as e:
+        print(f"   ⚠️ Error actualizando contexto: {e}")
+    
     return f"{res_garmin} | {res_withings}"
 
 if __name__ == "__main__":
