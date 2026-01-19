@@ -51,7 +51,7 @@ authenticator = stauth.Authenticate(
     credentials_dict,
     'bioengine_cookie',
     'bioengine_signature_key',
-    cookie_expiry_days=30
+    cookie_expiry_days=90  # Sesión persistente por 90 días
 )
 
 # Call login - this renders the login form
