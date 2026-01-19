@@ -260,17 +260,12 @@ if os.path.exists(prefs_path):
 default_start = min_date
 default_end = datetime.date.today()
 saved_start = prefs.get('start_date')
-saved_end = prefs.get('end_date')
+# Ya NO usamos saved_end - siempre hoy
 if saved_start:
     try:
         default_start = datetime.date.fromisoformat(saved_start)
     except ValueError:
         default_start = min_date
-if saved_end:
-    try:
-        default_end = datetime.date.fromisoformat(saved_end)
-    except ValueError:
-        default_end = max_date
 
 start_date = st.sidebar.date_input(
     "Analizar desde",
