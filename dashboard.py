@@ -310,20 +310,24 @@ if not df_peso_full.empty and 'Fecha' in df_peso_full.columns:
 else:
     df_p_f_full = pd.DataFrame()
 
-# --- 3. RENDERIZADO DE SECCIONES DINÁMICAS ---
-# Siempre mostrar tabs (cambio temporal para debug)
-if True:  # Antes: if not df_s_f.empty and (not df_p_f_apis.empty or not df_p_f_full.empty):
-    # Obtener último peso para el header (con valores por defecto si no hay datos)
+    # --- 3. RENDERIZADO DE SECCIONES DINÁMICAS ---
+    # Obtener el último peso histórico REAL (independientemente del filtro de fechas)
     last_p = 76.0
     last_p_date = 'N/A'
-    if not df_p_f_full.empty and 'Fecha' in df_p_f_full.columns:
-        df_p_sorted = df_p_f_full.dropna(subset=['Fecha']).sort_values('Fecha')
-        if not df_p_sorted.empty:
-            last_p = df_p_sorted.iloc[-1]['Peso']
-            last_p_date = df_p_sorted.iloc[-1]['Fecha'].strftime('%d/%m/%y')
+    if not df_peso_full.empty and 'Fecha' in df_peso_full.columns:
+        # Usamos el DataFrame completo (df_peso_full), no el filtrado (df_p_f_full)
+        df_p_all_sorted = df_peso_full.dropna(subset=['Fecha']).sort_values('Fecha')
+        if not df_p_all_sorted.empty:
+            # Obtener el último peso de toda la historia disponible
+            last_p = df_p_all_sorted.iloc[-1]['Peso']
+            last_p_date = df_p_all_sorted.iloc[-1]['Fecha'].strftime('%d/%m/%y')
 
-    # 1. Header de KPIs
-    dashboard_components.render_kpi_header(df_s_f, df_p_f_full, last_p, last_p_date)
+    # Siempre mostrar tabs
+    if True:
+        # 1. Header de KPIs
+        # Pasamos df_p_f_full para cálculos de promedios en el rango, 
+        # pero last_p ya tiene el valor más reciente absoluto.
+        dashboard_components.render_kpi_header(df_s_f, df_p_f_full, last_p, last_p_date)
 
     # 2. Coach Personal (Asistente de Recuperación Proactivo)
     from trainer_assistant import TrainerAssistant

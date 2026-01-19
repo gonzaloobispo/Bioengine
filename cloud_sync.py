@@ -215,15 +215,14 @@ def sincronizar_todo():
     res_garmin = sync_garmin_module()
     res_withings = sync_withings_module()
     
-    # Auto-actualizar estadísticas del contexto del usuario
+    # Auto-actualizar estadísticas (movido a super_merger.py para asegurar datos frescos)
+    # Detectar patrones automáticamente
     try:
         from context_manager import ContextManager
-        print("    Recalculando estadísticas del usuario...")
         ctx_mgr = ContextManager()
-        ctx_mgr.recalculate_stats_from_csv()
         
         # Detectar patrones automáticamente
-        print("    Detectando patrones...")
+        print("   🔍 Detectando patrones...")
         from pattern_detector import PatternDetector
         detector = PatternDetector(ctx_mgr)
         patterns = detector.analyze_all_patterns()

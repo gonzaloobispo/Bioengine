@@ -226,6 +226,15 @@ def actualizacion_rapida():
     # 4. Fusionar datos de peso: APIs y maestro completo (APIs + historicos)
     fusionar_peso()
     fusionar_peso_completo()
+    
+    # 5. Recalcular estadísticas contextuales (ahora que los CSVs están actualizados)
+    try:
+        from context_manager import ContextManager
+        ctx = ContextManager()
+        ctx.recalculate_stats_from_csv()
+        print("   [OK] Estadísticas contextuales recalculadas.")
+    except Exception as e:
+        print(f"   [WARNING] No se pudo actualizar el contexto: {e}")
 
 
 
@@ -315,3 +324,7 @@ def fusionar_peso():
     })
     df_final.to_csv(config.CSV_PESO_MAESTRO_APIS, sep=';', index=False)
     print(f"Fusión de peso completada. Total registros en maestro APIs: {len(df_final)}, fecha máxima: {df_final['Fecha'].max()}")
+
+
+if __name__ == "__main__":
+    actualizacion_rapida()
