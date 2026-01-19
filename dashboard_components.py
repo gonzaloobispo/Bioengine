@@ -266,13 +266,28 @@ def render_coach_chat(assistant):
                 fecha_limite = datetime.now() - timedelta(days=7)
                 df_reciente = df_sport[df_sport['Fecha'] >= fecha_limite].sort_values('Fecha', ascending=False)
                 
+                # Pasar TODOS los datos disponibles para análisis profundo
                 for _, row in df_reciente.head(10).iterrows():
-                    recent_activities.append({
-                        'fecha': row['Fecha'].strftime('%Y-%m-%d'),
+                    actividad = {
+                        'fecha': row['Fecha'].strftime('%Y-%m-%d %H:%M'),
                         'actividad': row.get('Actividad', 'Desconocida'),
                         'duracion_min': row.get('Duración (min)', 0),
                         'distancia_km': row.get('Distancia (km)', 0)
-                    })
+                    }
+                    
+                    # Agregar todos los campos adicionales disponibles
+                    campos_opcionales = [
+                        'Calorías', 'FC_Prom (bpm)', 'FC_Max (bpm)', 
+                        'Cadencia_Prom', 'Elevación (m)', 'Velocidad_Prom (km/h)',
+                        'Stress_Score', 'Temperatura (°C)', 'Potencia_Prom (W)',
+                        'Training_Effect', 'VO2Max_Estimado'
+                    ]
+                    
+                    for campo in campos_opcionales:
+                        if campo in row and pd.notna(row[campo]):
+                            actividad[campo] = row[campo]
+                    
+                    recent_activities.append(actividad)
         except Exception:
             pass
         
