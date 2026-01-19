@@ -459,6 +459,48 @@ def render_coach_chat(assistant):
             st.markdown(reply_text)
         st.session_state.messages.append({"role": "assistant", "content": reply_text})
         
+        # NUEVO: Logging automático de conversaciones importantes
+        try:
+            from context_manager import ContextManager
+            
+            # Detectar si la conversación es importante para guardar
+            es_importante = False
+            aprendizaje = ""
+            
+            # Criterios de importancia:
+            if plan_modificado:
+                es_importante = True
+                aprendizaje = f"Usuario solicitó cambio de plan: {prompt[:80]}"
+            
+            elif any(kw in prompt.lower() for kw in keywords_dolor):
+                es_importante = True
+                aprendizaje = f"Usuario reportó estado de rodilla"
+            
+            elif any(palabra in prompt.lower() for palabra in ["recomienda", "debería", "consejo", "qué hacer", "cómo"]):
+                # Consultas que requieren recomendación personalizada
+                if len(reply_text) > 100:  # Solo si la respuesta es sustancial
+                    es_importante = True
+                    aprendizaje = f"Consulta personalizada: {prompt[:80]}"
+            
+            elif "correlación" in reply_text.lower() or "patrón" in reply_text.lower():
+                # El asistente detectó un patrón o correlación
+                es_importante = True
+                aprendizaje = "Asistente identificó patrón o correlación"
+            
+            # Guardar si es importante
+            if es_importante:
+                ctx = ContextManager()
+                ctx.log_conversation_learning(
+                    summary=prompt[:150],  # Primeros 150 chars del mensaje
+                    learning=aprendizaje,
+                    context_note=reply_text[:200] if len(reply_text) > 200 else reply_text
+                )
+                print(f"[CONV] Conversación importante guardada: {aprendizaje}")
+                
+        except Exception as e:
+            # No fallar si hay error en logging
+            print(f"[WARNING] Error guardando conversacion: {e}")
+        
         # Forzar recarga si hubo acción crítica
         if action:
             st.rerun()
